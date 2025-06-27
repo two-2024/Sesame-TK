@@ -1,48 +1,55 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- 主图 -->
+    <!-- 最底层背景图 -->
     <ImageView
         android:id="@+id/main_image"
-        android:layout_width="320dp"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:alpha="0.3"
         android:contentDescription="@string/the_image_of_main"
-        android:onClick="onClick"
-        android:scaleType="centerInside"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
         app:srcCompat="@drawable/main"
-        android:alpha="0.8"
-        tools:ignore="ImageContrastCheck,MissingConstraints,UsingOnClickInXml" />
+        tools:ignore="ImageContrastCheck" />
 
     <!-- 标题栏 -->
     <include
+        android:id="@+id/base_title"
         layout="@layout/base_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
-
+    <!-- 一句话 API -->
     <TextView
         android:id="@+id/one_word"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="72dp"
+        android:layout_marginTop="24dp"
         android:gravity="center"
+        android:textAlignment="center"
         android:onClick="onClick"
         android:text="@string/text_api"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textColor="?attr/colorOnSurface"
         android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/base_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="UsingOnClickInXml" />
 
     <!-- 构建目标 -->
@@ -50,10 +57,11 @@
         android:id="@+id/bulid_target"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="56dp"
         android:fontFamily="sans-serif-smallcaps"
         android:gravity="center"
         android:text="@string/bulid_target"
+        android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -65,87 +73,200 @@
         android:id="@+id/bulid_version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="20dp"
         android:fontFamily="sans-serif-smallcaps"
         android:gravity="center"
         android:text="@string/build_version_1_0_0"
+        android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.Material3.BodySmall"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/bulid_target" />
 
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/bottom_button_container"
-        android:layout_width="0dp"
+    <!-- 作者信息 -->
+    <TextView
+        android:id="@+id/bulid_author"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
+        android:layout_marginTop="20dp"
+        android:fontFamily="sans-serif-smallcaps"
+        android:gravity="center"
+        android:text="ALLG编译，与原版保持一致。👑"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+        android:textColor="#FFD700"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bulid_version" />
 
-        <!-- 第一行三个按钮 -->
+    <!-- 官方声明 -->
+    <TextView
+        android:id="@+id/message"
+        android:layout_width="329dp"
+        android:layout_height="134dp"
+        android:layout_marginTop="40dp"
+        android:fontFamily="sans-serif-smallcaps"
+        android:gravity="center"
+        android:text="@string/app_disclaimer"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+        android:textColor="@android:color/holo_red_dark"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bulid_author" />
+
+    <!-- 按钮区域 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/button_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/message"
+        app:layout_constraintVertical_bias="0.363">
+
+        <!-- 第一行按钮 -->
+        <!-- 森林日志 -->
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.App.Button.Main"
             android:id="@+id/btn_forest_log"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="96dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/blur_button_bg"
+            android:elevation="8dp"
             android:onClick="onClick"
             android:text="@string/forest_log"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
             app:icon="@drawable/forest"
+            app:iconGravity="top"
+            app:iconPadding="4dp"
+            app:iconSize="48dp"
+            app:iconTint="@null"
             app:layout_constraintEnd_toStartOf="@id/btn_farm_log"
+            app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- 庄园日志 -->
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.App.Button.Main"
             android:id="@+id/btn_farm_log"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="96dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/blur_button_bg"
+            android:elevation="8dp"
             android:onClick="onClick"
             android:text="@string/farm_log"
-            app:icon="@drawable/farm2"
-            app:layout_constraintEnd_toStartOf="@id/btn_other_log"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            app:icon="@drawable/farm"
+            app:iconGravity="top"
+            app:iconPadding="4dp"
+            app:iconSize="48dp"
+            app:iconTint="@null"
+            app:layout_constraintEnd_toStartOf="@id/btn_github"
             app:layout_constraintStart_toEndOf="@id/btn_forest_log"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- GitHub（移上来） -->
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.App.Button.Main"
-            android:id="@+id/btn_other_log"
+            android:id="@+id/btn_github"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="96dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/blur_button_bg"
+            android:elevation="8dp"
             android:onClick="onClick"
-            android:text="@string/other_log"
-            app:icon="@drawable/all_log"
+            android:text="@string/visit_github"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            app:icon="@drawable/github"
+            app:iconGravity="top"
+            app:iconPadding="4dp"
+            app:iconSize="48dp"
+            app:iconTint="@null"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/btn_farm_log"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 第二行三个按钮 -->
+        <!-- 第二行按钮 -->
+        <!-- 好友看板 -->
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.App.Button.Main"
-            android:id="@+id/btn_friend_watch"
+            android:id="@+id/btn_view_error_log_file"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="96dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/blur_button_bg"
+            android:elevation="8dp"
             android:onClick="onClick"
-            android:text="@string/friend_watch"
-            app:icon="@drawable/friend"
-            app:layout_constraintEnd_toStartOf="@id/btn_github"
+            android:text="@string/view_error_log_file"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            app:icon="@drawable/error_log_file"
+            app:iconGravity="top"
+            app:iconPadding="4dp"
+            app:iconSize="48dp"
+            app:iconTint="@null"
+            app:layout_constraintEnd_toStartOf="@id/btn_view_all_log_file"
+            app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btn_forest_log" />
 
+        <!-- 其他日志（移下来） -->
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.App.Button.Main"
-            android:id="@+id/btn_github"
+            android:id="@+id/btn_view_all_log_file"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="96dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/blur_button_bg"
+            android:elevation="8dp"
             android:onClick="onClick"
-            android:text="@string/visit_github"
-            app:icon="@drawable/github"
+            android:text="@string/view_all_log_file"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            app:icon="@drawable/all_log"
+            app:iconGravity="top"
+            app:iconPadding="4dp"
+            app:iconSize="48dp"
+            app:iconTint="@null"
             app:layout_constraintEnd_toStartOf="@id/btn_settings"
-            app:layout_constraintStart_toEndOf="@id/btn_friend_watch"
+            app:layout_constraintStart_toEndOf="@id/btn_view_error_log_file"
             app:layout_constraintTop_toBottomOf="@id/btn_farm_log" />
 
+        <!-- 设置 -->
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.App.Button.Main"
             android:id="@+id/btn_settings"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="96dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/blur_button_bg"
+            android:elevation="8dp"
             android:onClick="onClick"
             android:text="@string/settings"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
             app:icon="@drawable/setting"
+            app:iconGravity="top"
+            app:iconPadding="4dp"
+            app:iconSize="48dp"
+            app:iconTint="@null"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/btn_github"
-            app:layout_constraintTop_toBottomOf="@id/btn_other_log" />
+            app:layout_constraintStart_toEndOf="@id/btn_view_all_log_file"
+            app:layout_constraintTop_toBottomOf="@id/btn_github" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
