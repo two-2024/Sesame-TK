@@ -70,7 +70,7 @@
 
     <!-- 构建版本 -->
     <TextView
-        android:id="@+id/bulid_version"
+        android:id="@+id/build_version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
@@ -86,7 +86,7 @@
 
     <!-- 作者信息 -->
     <TextView
-        android:id="@+id/bulid_author"
+        android:id="@+id/build_author"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
@@ -100,7 +100,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bulid_version" />
+        app:layout_constraintTop_toBottomOf="@id/build_version" />
 
     <!-- 官方声明 -->
     <TextView
@@ -117,7 +117,7 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bulid_author" />
+        app:layout_constraintTop_toBottomOf="@id/build_author" />
 
     <!-- 按钮区域 -->
     <androidx.constraintlayout.widget.ConstraintLayout
