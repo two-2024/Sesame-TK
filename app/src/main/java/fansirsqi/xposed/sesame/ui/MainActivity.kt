@@ -454,4 +454,4 @@ class MainActivity : BaseActivity() {
             RunType.LOADED.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary))
         }
     }
-}检查
+}
