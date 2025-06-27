@@ -1,8 +1,7 @@
-![Sesame-TK](https://socialify.git.ci/Fansirsqi/Sesame-TK/image?description=1&font=Source%20Code%20Pro&forks=1&issues=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2FFansirsqi%2FSesame-TK%2Frefs%2Fheads%2Fmain%2Fapp%2Fsrc%2Fmain%2Fassets%2Fweb%2FSesame-TK-logo.svg&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto)
-
-[![License](https://img.shields.io/github/license/Fansirsqi/Sesame-TK?labelColor=fff&label=License&logo=gnuprivacyguard)](https://raw.githubusercontent.com/Fansirsqi/Sesame-TK/refs/heads/main/LICENSE)  
-[![Latest Release](https://img.shields.io/github/release/Fansirsqi/Sesame-TK?labelColor=fff&label=Releases&logo=gitlfs)](../../releases)  
-[![All Releases Download](https://img.shields.io/github/downloads/Fansirsqi/Sesame-TK/total?labelColor=fff&label=Downloads&logo=codefresh)](../../releases)  
+![Sesame-TK](https://socialify.git.ci/ALLG999/Sesame-TK/image?custom_language=OpenAI&description=1&font=Inter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2FALLG999%2FSesame-TK%2Frefs%2Fheads%2Fmain%2Fapp%2Fsrc%2Fmain%2Fres%2Fdrawable%2Fic_launcher.png&name=1&owner=1&pattern=Circuit+Board&pulls=1&stargazers=1&theme=Auto)
+[![License](https://img.shields.io/github/license/ALLG999/Sesame-TK?labelColor=fff&label=License&logo=gnuprivacyguard)](https://raw.githubusercontent.com/ALLG999/Sesame-TK/refs/heads/main/LICENSE)  
+[![Latest Release](https://img.shields.io/github/release/ALLG999/Sesame-TK?labelColor=fff&label=Releases&logo=gitlfs)](../../releases)  
+[![All Releases Download](https://img.shields.io/github/downloads/ALLG999/Sesame-TK/total?labelColor=fff&label=Downloads&logo=codefresh)](../../releases)  
 [![Telegram-Channel](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Channel&labelColor=fff&link=https%3A%2F%2Ft.me%2FSesame_TK_Channel)](https://t.me/Sesame_TK_Channel)  
 [![Telegram-Group](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Group&labelColor=fff&link=https%3A%2F%2Ft.me%2Ffansirsqi_xposed_sesame)](https://t.me/fansirsqi_xposed_sesame)  
 [![云湖](https://img.shields.io/badge/%E4%BA%91%E6%B9%96-%E4%BA%A4%E6%B5%81%E7%BE%A4-nul?logo=icloud&logoColor=%236F4FD0&label=%E4%BA%91%E6%B9%96&labelColor=fff&color=%236F4FD0&link=https%3A%2F%2Fyhfx.jwznb.com%2Fshare%3Fkey%3DpEGmZ1gsdoBI%26ts%3D1734597564%20)](https://yhfx.jwznb.com/share?key=pEGmZ1gsdoBI&ts=1734597564)
@@ -14,34 +13,8 @@
 ### 📢欢迎大家提出宝贵意见，共同完善此项目
 
 > ### ~~墙内不再更新~~ 有缘再见~
->
-> [~~戳这里~~](https://fansirs.lanzoue.com/b011kv6pwd) ~~密码:`9527`~~
 
-> ## 2025-06-11更新咸鱼耻辱名单
-
-
-### 以下内容对项目的发展造成了一定的影响，经研究决定 清空所有workflow ，以及项目所有资产，欢迎pr你在咸鱼看到的卖家，我会在这里更新
-
-## 耻辱列表
-
-**访问方法**
-`https://www.goofish.com/personal?userId=xxx`  
-将下面的userid替换上面的xxx
-如 `星空卡券`： https://www.goofish.com/personal?userId=590917148
-
-什么时候这些主页下架了模块，我们再发布新版本😁，或者等咸鱼大佬更新，~~我们再抄~~
-
-|    咸鱼昵称    |    userid     |    更新日期    |                                                                                                        证据 |
-| :--------: | :-----------: | :--------: | --------------------------------------------------------------------------------------------------------: |
-|    星空卡券    |   590917148   | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.4jocuogftd.webp) |
-|   好笑的士兵    | 2208083536994 | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.6m45irtzyh.webp) |
-| 不及时确认收货不交易 | 2212868979480 | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.7zqomtakoy.webp) |
-|   宝宝微多猫    |  2434615193   | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.4cl4zam5vy.webp) |
-|    应用大全    | 2215835360792 | 2025-06-11 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250611/image.2324ft3jo1.webp) |
-|   勤劳的小蜜蜂   | 2219398988369 | 2025-06-13 |  ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250613/image.8adiif2fz5.png) |
-|    star    |  3320174826   | 2025-06-13 | ![image](https://cdn.jsdelivr.net/gh/Fansirsqi/picx-images-hosting@master/20250613/image.8dx4g4zy20.webp) |
-
-。。。
+> ### 非官方编译，别问安装的时候为啥签名冲突，因为我不会！
 
 🤖 代码的大部分内容是通过 `GPT-4o` 模型的辅助来完成的。
 
@@ -51,16 +24,41 @@
 
 ❓ 访问异常请手动开启 平衡网络延迟选项，设置适当的延迟时间以及查询时间
 
-☀️ 对了，我自己用的支付宝版本是`10.5.88.8000（忘了）`~`10.6.66.8000(1916)`~`10.7.26.8100(2560)`
+☀️ 对了，我自己用的官版支付宝版本`10.6.58.8000`和Play版支付宝版本`10.6.58.9100`
 
 💊 如果你想自己编译，请fork本项目
 
 📕 开发者或用户请看[维基](https://github.com/Fansirsqi/Sesame-TK/wiki)
 
+### 关于普通版与LITE（养老）版本的简介
+| 普通版功能                      | LITE版（养老）                          |  
+|----------------------------|------------------------------|  
+| <details><summary>基础功能</summary>启用模块<br>保持唤醒<br>执行间隔<br>模块休眠时间<br>定时执行<br>定时唤醒<br>只收能量时间<br>定时任务模式<br>超时重启<br>异常等待时间<br>开启异常通知<br>异常次数阈值<br>使用新接口<br>开启抓包<br>启用HOOK数据转发<br>HOOK数据转发地址<br>为支付宝申请后台运行权限<br>全部记录日志<br>气泡提示<br>开启状态栏禁删<br>只显示中文并设置时区<br>气泡纵向偏移</details>         | <details><summary>基础功能</summary>启用模块<br>保持唤醒<br>执行间隔<br>模块休眠时间<br>定时执行<br>定时唤醒<br>只收能量时间<br>定时任务模式<br>超时重启<br>异常等待时间<br>开启异常通知<br>异常次数阈值<br>使用新接口<br>开启抓包<br>启用HOOK数据转发<br>HOOK数据转发地址<br>为支付宝申请后台运行权限<br>全部记录日志<br>气泡提示<br>开启状态栏禁删<br>只显示中文并设置时区<br>气泡纵向偏移</details> |  
+| <details><summary>森林功能</summary>官网下载地址<br>开启森林<br>收集能量<br>一键收取<br>自动关闭6秒拼手速<br>能量雨<br>不收能量<br>赠送能量雨<br>兑换能量雨次卡<br>收取浇水金球<br>收取过期能量<br>双击卡<br>加速器<br>保护罩<br>炸弹卡<br>1.1倍能量卡<br>隐身卡<br>返水<br>赠送道具<br>收集道具<br>复活能量<br>活力值兑换<br>保护地巡护<br>合成宠物碎片<br>派遣动物伙伴<br>森林任务<br>森林寻宝任务<br>领取礼盒<br>健康医疗任务<br>森林集市<br>青春特权<br>绿色行动<br>查询间隔<br>收取间隔<br>双击间隔<br>平衡网络延迟<br>提前时间<br>尝试收取<br>重试间隔</details> | <details><summary>森林功能</summary>官网下载地址<br>开启森林<br>收集能量<br>一键收取<br>自动关闭6秒拼手速<br>能量雨<br>不收能量<br>赠送能量雨<br>兑换能量雨次卡<br>收取浇水金球<br>收取过期能量<br>双击卡<br>加速器<br>保护罩<br>炸弹卡<br>1.1倍能量卡<br>隐身卡<br>返水<br>赠送道具<br>收集道具<br>复活能量<br>活力值兑换<br>保护地巡护<br>合成宠物碎片<br>派遣动物伙伴<br>森林任务<br>森林寻宝任务<br>领取礼盒<br>健康医疗任务<br>森林集市<br>青春特权<br>绿色行动<br>查询间隔<br>收取间隔<br>双击间隔<br>平衡网络延迟<br>提前时间<br>尝试收取<br>重试间隔</details> |  
+| <details><summary>庄园功能</summary>按普通版为准</details> | <details><summary>庄园功能</summary>与普通版一致</details> |  
+| <details><summary>农场功能</summary>按普通版为准</details> | <details><summary>农场功能</summary>与普通版一致</details> |  
+| <details><summary>海洋功能</summary>按普通版为准</details> | <details><summary>海洋功能</summary>与普通版一致</details> |  
+| <details><summary>神奇物种功能</summary>按普通版为准</details> | <details><summary>神奇物种功能</summary>无此功能（关闭此项有效缓解弹窗次数）</details> |  
+| <details><summary>古树功能</summary>按普通版为准</details> | <details><summary>古树功能</summary>无此功能（（没用，浪费能量）</details> |  
+| <details><summary>合种功能</summary>按普通版为准</details> | <details><summary>合种功能</summary>无此功能（（没用，浪费能量）</details> |  
+| <details><summary保护地功能</summary>按普通版为准</details> | <details><summary>保护地功能</summary>无此功能（（没用，浪费能量）</details> |  
+| <details><summary>运动功能</summary>按普通版为准</details> | <details><summary>运动功能</summary>保留纯粹的运动</details> |  
+| <details><summary>会员功能</summary>按普通版为准</details> | <details><summary>会员功能</summary>无此功能（（保留会员签到和兑换功能，其他的全部扔了）</details> |  
+| <details><summary>新村功能</summary>按普通版为准</details> | <details><summary>新村功能</summary>无此功能（（没用，关闭此项有效缓解弹窗次数）</details> |  
+| <details><summary>绿色经营功能</summary>按普通版为准</details> | <details><summary>绿色经营功能</summary>无此功能（关闭此项有效缓解弹窗次数）</details> |  
+| <details><summary>AI答题功能</summary>按普通版为准</details> | <details><summary>AI答题功能</summary>与普通版一致</details> |  
+| <details><summary>主题设置功能</summary>按普通版为准</details> | <details><summary>主题设置功能</summary>与普通版一致</details> |  
+<details> 
+<summary>README项目展示图替换教程</summary>   
+访问网址，把你的项目粘贴进去，制作好替换一下就行<a href="https://socialify.git.ci">Socialify</a>
+</details>  
+<details> 
+<summary>安卓签名方法</summary>   
 然后在仓库设置相关签名文件信息，使用GitHub Actions编译，下载编译好的APK文件，安装到手机上即可  
 签名的生成以及转码请自行🔍解决 很简单滴~，你绝B可以
+<br>酷安搜懒真人，他发过教程！
 
-| 仓库变量名                      | 变量值                          |  
+| 签名变量名                      | 变量值                          |  
 |----------------------------|------------------------------|  
 | `ANDROID_SIGNING_KEY`      | `keystore.jks`文件的base64编码字符串 |  
 | `ANDROID_KEY_ALIAS`        | `keystore.jks`文件别名           |  
@@ -68,9 +66,124 @@
 | `ANDROID_KEY_PASSWORD`     | `keystore.jks`文件密码           |  
 
 设置好这些后，去仓库新建一个release，随便新建一个tag，然后点击`Publish release`，GitHub Actions会自动编译并发布APK文件到release中，下载安装即可
+</details> 
+<details> 
+<summary>GitHub Token/Pat报错</summary>   
+请在Sesame-TK/.github/workflows
+/android.yml文件中删除如下代码
+  
+```yaml
+- name: Sync Release to Target Repository
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: Xposed-Modules-Repo/fansirsqi.xposed.sesame # 目标仓库的拥有者和仓库名称
+          name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
+          files: |
+            ${{ steps.sign_normal_apk.outputs.signedFile }}
+            ${{ steps.sign_compatible_apk.outputs.signedFile }}
+            CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          token: ${{ secrets.TARGET_REPO_PAT }}
+          tag_name: ${{ steps.extract_info.outputs.version }}
+          draft: false
+          prerelease: ${{ steps.pre_release.outputs.IS_PRERELEASE }}
+          append_body: false
+          make_latest: true
+          body: |
+            📦 本 Release 同步自源仓库 [Sesame-TK](https://github.com/${{ github.repository }})
+            ✨ **更新内容**:
+            ${{ github.event.release.body || '无更新说明' }}
+  ```
+</details>  
+<details> <summary>Telegram报错一键解决方案</summary>   
+请在Sesame-TK/.github/workflows
+/android.yml文件中删除如下代码
 
+  ```yaml
+- name: Send Combined Message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TG_CHAT_ID }}
+          token: ${{ secrets.TG_BOT_TOKEN }}
+          message: |
+            📦 *New Version ${{ steps.extract_info.outputs.version }} Build!*
 
+            - Files: 
+              - Normal: `${{ steps.extract_info.outputs.normal_file }}`
+              - Compatible: `${{ steps.extract_info.outputs.compatible_file }}`
+            - Branch: `${{ github.ref_name }}`
+            - Triggered by: `${{ github.actor }}`
 
+            *下载说明:*
+              * Normal 为正常版本,适用于`Android 8.0`及以上的系统
+              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
+
+            ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
+          format: markdown
+
+      - name: Send Normal APK
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TG_CHAT_ID }}
+          token: ${{ secrets.TG_BOT_TOKEN }}
+          document: ${{ steps.extract_apks.outputs.signed_normal }}
+
+      - name: Send Compatible APK
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TG_CHAT_ID }}
+          token: ${{ secrets.TG_BOT_TOKEN }}
+          document: ${{ steps.extract_apks.outputs.signed_compatible }}
+
+      - name: Create Tag from Version
+        if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
+        run: |
+          VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
+          echo "Creating tag: $VERSION_TAG"
+          git tag "$VERSION_TAG"
+          git push origin "$VERSION_TAG"
+      - name: Upload Assets to Source Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
+          files: |
+            ${{ steps.extract_apks.outputs.signed_compatible }}
+            ${{ steps.extract_apks.outputs.signed_normal }}
+            CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          tag_name: ${{ steps.extract_info.outputs.version}}
+          draft: false
+          append_body: true
+          generate_release_notes: true
+          body: |
+            ## ✨What's Changed
+
+            ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
+            > ## 下载说明
+              * Normal 为正常版本,适用于`Android 8.0`及以上的系统
+              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
+
+            > ~~墙内不再更新~~ 倒卖必死全家
+```
+</details>
+<details> <summary>TG BOT配置教程</summary>   
+<h3>创建 Telegram Bot</h3>  
+
+- 私聊 ```@BotFather```
+- 发送 ```/newbot``` 创建新 bot → 获取 TG_BOT_TOKEN
+- 获取 Chat ID：
+- 将 bot 添加到群组/频道
+- 访问:```https://api.telegram.org/bot<TG_BOT_TOKEN>/getUpdates```
+- 例如:```https://api.telegram.org/bot123456:abcdefg/getUpdates```
+- 找到```"sender_chat": {"id": -这是一串负数,``` 或者 ```"chat": {"id": -这是一串负数,```
+- 查找响应中的 "id" 字段 → 即 TG_CHAT_ID
+
+| TG变量名                      | 变量值                          |  
+|----------------------------|------------------------------|  
+| `TG_CHAT_ID`      | `-100123456789`群ID |  
+| `TG_BOT_TOKEN`        | `k123456：abcdefg`密钥           |  
+
+</details>  
 <details>  
 <summary>Preview Images</summary>  
 
@@ -117,6 +230,8 @@
 ### 旧版本在 [XQuickEnergy](https://github.com/TKaxv-7S/XQuickEnergy)
 
 </details>  
+<details>  
+<summary>主要功能</summary>  
 
 ## 主要功能
 
@@ -144,19 +259,15 @@
 
 ## 授权说明
 
-本项目fork自  
-基于 [constanline版XQuickEnergy](https://github.com/constanline/XQuickEnergy)  
-与 [pansong291版XQuickEnergy](https://github.com/pansong291/XQuickEnergy)  
+本项目fork自  基于 [constanline版XQuickEnergy](https://github.com/constanline/XQuickEnergy)  与 [pansong291版XQuickEnergy](https://github.com/pansong291/XQuickEnergy)  
 开发的项目[Sesame-TK](https://github.com/TKaxv-7S/Sesame-TK)  
 并且在其基础上进行了少量的功能改进与优化。得益于GPT4-o模型的强大能力使得本项目能有这么多提交  
 但是不确定是否是有效修改，请自行斟酌考虑使用。
 
 所有图片由 ༒激༙྇流༙྇泉༙྇༒ 授权使用
+</details>  
 
 ## 协议说明
-
-在 **北京时间2024年7月15日之前** 提交的所有代码 ，遵循 Apache-2.0 协议
-
 自 **北京时间2024年7月15日开始** 提交的所有代码 ，遵循 GPLv3 协议，并禁止用于任何商业用途、禁止二次修改后闭源发布
 
 ## 鸣谢
@@ -171,8 +282,8 @@
 
 <a href="https://star-history.com/#Fansirsqi/Sesame-TK&Timeline">  
  <picture>  
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline&theme=dark" />  
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline" />  
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline" />  
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ALLG999/Sesame-TK&type=Timeline&theme=dark" />  
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ALLG999/Sesame-TK&type=Timeline" />  
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ALLG999/Sesame-TK&type=Timeline" />  
  </picture>  
 </a>
