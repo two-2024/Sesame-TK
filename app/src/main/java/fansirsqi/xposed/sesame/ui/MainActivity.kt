@@ -34,7 +34,6 @@ import fansirsqi.xposed.sesame.util.Log
 import fansirsqi.xposed.sesame.util.maps.UserMap
 import fansirsqi.xposed.sesame.util.PermissionUtil
 import fansirsqi.xposed.sesame.util.ToastUtil
-import java.util.Calendar
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -56,15 +55,15 @@ class MainActivity : BaseActivity() {
         hasPermissions = PermissionUtil.checkOrRequestFilePermissions(this)
         if (!hasPermissions) {
             Toast.makeText(this, "未获取文件读写权限", Toast.LENGTH_LONG).show()
-            finish() // 如果权限未获取，终止当前 Activity
+            finish()
             return
         }
         setContentView(R.layout.activity_main)
         val mainImage = findViewById<View>(R.id.main_image)
-        val buildVersion = findViewById<TextView>(R.id.bulid_version)
+        val buildVersion = findViewById<TextView>(R.id.build_version)
         val buildTarget = findViewById<TextView>(R.id.bulid_target)
         oneWord = findViewById(R.id.one_word)
-        // 获取并设置一言句子
+
         try {
             if (!AssetUtil.copySoFileToStorage(this, AssetUtil.checkerDestFile)) {
                 Log.error(TAG, "checker file copy failed")
@@ -79,7 +78,6 @@ class MainActivity : BaseActivity() {
         }
 
         mainImage?.setOnLongClickListener { v: View ->
-            // 当视图被长按时执行的操作
             if (v.id == R.id.main_image) {
                 val data = "file://" + Files.getDebugLogFile().absolutePath
                 val it = Intent(this@MainActivity, HtmlViewerActivity::class.java)
@@ -87,18 +85,17 @@ class MainActivity : BaseActivity() {
                 it.putExtra("canClear", true)
                 it.data = data.toUri()
                 startActivity(it)
-                return@setOnLongClickListener true // 表示事件已处理
+                return@setOnLongClickListener true
             }
-            false // 如果不是目标视图，返回false
+            false
         }
         FansirsqiUtil.getOneWord(
             object : OneWordCallback {
                 override fun onSuccess(result: String?) {
-                    runOnUiThread { oneWord.text = result } // 在主线程中更新UI
+                    runOnUiThread { oneWord.text = result }
                 }
-
                 override fun onFailure(error: String?) {
-                    runOnUiThread { oneWord.text = error } // 在主线程中更新UI
+                    runOnUiThread { oneWord.text = error }
                 }
             })
         buildVersion.text = "Build Version: " + ViewAppInfo.appVersion // 版本信息
@@ -108,7 +105,7 @@ class MainActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         if (hasPermissions) {
-            try { //打开设置前需要确认设置了哪个UI
+            try {
                 UIConfig.load()
             } catch (e: Exception) {
                 Log.printStackTrace(e)
@@ -135,8 +132,8 @@ class MainActivity : BaseActivity() {
                 }
                 userNameList.add(0, "默认")
                 userEntityList.add(0, null)
-                userNameArray = userNameList.toTypedArray<String>()
-                userEntityArray = userEntityList.toTypedArray<UserEntity?>()
+                userNameArray = userNameList.toTypedArray()
+                userEntityArray = userEntityList.toTypedArray()
             } catch (e: Exception) {
                 userNameArray = arrayOf("默认")
                 userEntityArray = arrayOf(null)
@@ -158,19 +155,18 @@ class MainActivity : BaseActivity() {
             R.id.btn_forest_log -> {
                 data += Files.getForestLogFile().absolutePath
             }
-
             R.id.btn_farm_log -> {
                 data += Files.getFarmLogFile().absolutePath
             }
-
-            R.id.btn_other_log -> {
-                data += Files.getOtherLogFile().absolutePath
+            R.id.btn_view_error_log_file -> {
+                data += Files.getErrorLogFile().absolutePath
             }
-
+            R.id.btn_view_all_log_file -> {
+                data += Files.getRecordLogFile().absolutePath
+            }
             R.id.btn_github -> {
                 data = "https://github.com/Fansirsqi/Sesame-TK"
             }
-
             R.id.btn_settings -> {
                 showSelectionDialog(
                     "📌 请选择配置",
@@ -182,22 +178,6 @@ class MainActivity : BaseActivity() {
                 )
                 return
             }
-
-            R.id.btn_friend_watch -> {
-
-                showSelectionDialog(
-                    "🤣 请选择有效账户[别选默认]",
-                    userNameArray,
-                    { index: Int -> this.goFriendWatch(index) },
-                    "😡 老子不选了，滚",
-                    {},
-                    false
-                )
-
-
-                return
-            }
-
             R.id.one_word -> {
                 Thread {
                     ToastUtil.showToastWithDelay(this@MainActivity, "😡 正在获取句子，请稍后……", 800)
@@ -205,11 +185,10 @@ class MainActivity : BaseActivity() {
                     FansirsqiUtil.getOneWord(
                         object : OneWordCallback {
                             override fun onSuccess(result: String?) {
-                                runOnUiThread { oneWord.text = result } // 在主线程中更新UI
+                                runOnUiThread { oneWord.text = result }
                             }
-
                             override fun onFailure(error: String?) {
-                                runOnUiThread { oneWord.text = error } // 在主线程中更新UI
+                                runOnUiThread { oneWord.text = error }
                             }
                         })
                 }.start()
@@ -223,21 +202,22 @@ class MainActivity : BaseActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         try {
-            // 使用清单文件中定义的完整别名
             val aliasComponent = ComponentName(this, General.MODULE_PACKAGE_UI_ICON)
             val state = packageManager.getComponentEnabledSetting(aliasComponent)
-            // 注意状态判断逻辑修正
             val isEnabled = state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             menu.add(0, 1, 1, R.string.hide_the_application_icon)
                 .setCheckable(true).isChecked = !isEnabled
-            menu.add(0, 2, 2, R.string.view_error_log_file)
-            menu.add(0, 3, 3, R.string.view_all_log_file)
-            menu.add(0, 4, 4, R.string.view_runtim_log_file)
-            menu.add(0, 5, 5, R.string.view_capture)
-            menu.add(0, 6, 6, R.string.extend)
-            menu.add(0, 7, 7, R.string.settings)
+            
+            menu.add(0, 2, 2, R.string.friend_watch)
+            menu.add(0, 3, 3, R.string.other_log)
+            menu.add(0, 4, 4, R.string.view_error_log_file)
+            menu.add(0, 5, 5, R.string.view_all_log_file)
+            menu.add(0, 6, 6, R.string.view_runtim_log_file)
+            menu.add(0, 7, 7, R.string.view_capture)
+            menu.add(0, 8, 8, R.string.extend)
+            menu.add(0, 9, 9, R.string.settings)
             if (ViewAppInfo.isApkInDebug) {
-                menu.add(0, 8, 8, "清除配置")
+                menu.add(0, 10, 10, "清除配置")
             }
         } catch (e: Exception) {
             Log.printStackTrace(e)
@@ -249,86 +229,103 @@ class MainActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            1 -> {
+            1 -> { // 隐藏应用图标
                 val shouldHide = !item.isChecked
                 item.isChecked = shouldHide
-
                 val aliasComponent = ComponentName(this, General.MODULE_PACKAGE_UI_ICON)
                 val newState = if (shouldHide) {
                     PackageManager.COMPONENT_ENABLED_STATE_DISABLED
                 } else {
                     PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                 }
-
                 packageManager.setComponentEnabledSetting(
                     aliasComponent,
                     newState,
                     PackageManager.DONT_KILL_APP
                 )
-
-                // 提示用户需要重启启动器才能看到效果
-                Toast.makeText(this, "设置已保存，可能需要重启桌面才能生效", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "设置已保存，可能需要重启桌面才能生效", Toast.LENGTH_SHORT).show()
                 return true
             }
-
-            2 -> {
-                var errorData = "file://"
-                errorData += Files.getErrorLogFile().absolutePath
+            2 -> { // 好友关注列表
+                showSelectionDialog(
+                    "🤣 请选择有效账户[别选默认]",
+                    userNameArray,
+                    { index: Int -> this.goFriendWatch(index) },
+                    "😡 老子不选了，滚",
+                    {},
+                    false
+                )
+                return true
+            }
+            3 -> { // 查看其他日志
+                val data = "file://" + Files.getOtherLogFile().absolutePath
+                val intent = Intent(this, HtmlViewerActivity::class.java)
+                intent.putExtra("nextLine", false)
+                intent.putExtra("canClear", true)
+                intent.data = data.toUri()
+                startActivity(intent)
+                return true
+            }
+            4 -> { // 查看错误日志文件
+                val errorData = "file://" + Files.getErrorLogFile().absolutePath
                 val errorIt = Intent(this, HtmlViewerActivity::class.java)
                 errorIt.putExtra("nextLine", false)
                 errorIt.putExtra("canClear", true)
                 errorIt.data = errorData.toUri()
                 startActivity(errorIt)
+                return true
             }
-
-            3 -> {
-                var recordData = "file://"
-                recordData += Files.getRecordLogFile().absolutePath
+            5 -> { // 查看全部日志文件
+                val recordData = "file://" + Files.getRecordLogFile().absolutePath
                 val otherIt = Intent(this, HtmlViewerActivity::class.java)
                 otherIt.putExtra("nextLine", false)
                 otherIt.putExtra("canClear", true)
                 otherIt.data = recordData.toUri()
                 startActivity(otherIt)
+                return true
             }
-
-            4 -> {
-                var runtimeData = "file://"
-                runtimeData += Files.getRuntimeLogFile().absolutePath
+            6 -> { // 查看运行时日志文件
+                val runtimeData = "file://" + Files.getRuntimeLogFile().absolutePath
                 val allIt = Intent(this, HtmlViewerActivity::class.java)
                 allIt.putExtra("nextLine", false)
                 allIt.putExtra("canClear", true)
                 allIt.data = runtimeData.toUri()
                 startActivity(allIt)
+                return true
             }
-
-            5 -> {
-                var captureData = "file://"
-                captureData += Files.getCaptureLogFile().absolutePath
+            7 -> { // 查看截图
+                val captureData = "file://" + Files.getCaptureLogFile().absolutePath
                 val captureIt = Intent(this, HtmlViewerActivity::class.java)
                 captureIt.putExtra("nextLine", false)
                 captureIt.putExtra("canClear", true)
                 captureIt.data = captureData.toUri()
                 startActivity(captureIt)
+                return true
             }
-
-            6 ->                 // 扩展功能
+            8 -> { // 扩展
                 startActivity(Intent(this, ExtendActivity::class.java))
-
-            7 -> selectSettingUid()
-            8 -> AlertDialog.Builder(this)
-                .setTitle("⚠️ 警告")
-                .setMessage("🤔 确认清除所有模块配置？")
-                .setPositiveButton(R.string.ok) { _: DialogInterface?, _: Int ->
-                    if (Files.delFile(Files.CONFIG_DIR)) {
-                        Toast.makeText(this, "🙂 清空配置成功", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, "😭 清空配置失败", Toast.LENGTH_SHORT).show()
+                return true
+            }
+            9 -> { // 设置
+                selectSettingUid()
+                return true
+            }
+            10 -> { // 清除配置
+                AlertDialog.Builder(this)
+                    .setTitle("⚠️ 警告")
+                    .setMessage("🤔 确认清除所有模块配置？")
+                    .setPositiveButton(R.string.ok) { _: DialogInterface?, _: Int ->
+                        if (Files.delFile(Files.CONFIG_DIR)) {
+                            Toast.makeText(this, "🙂 清空配置成功", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this, "😭 清空配置失败", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
-                .setNegativeButton(R.string.cancel) { dialog: DialogInterface, _: Int -> dialog.dismiss() }
-                .create()
-                .show()
+                    .setNegativeButton(R.string.cancel) { dialog: DialogInterface, _: Int -> dialog.dismiss() }
+                    .create()
+                    .show()
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -352,7 +349,6 @@ class MainActivity : BaseActivity() {
 
         val length = userNameArray.size
         if (length in 1..2) {
-            // 定义超时时间（单位：毫秒）
             val timeoutMillis: Long = 800
             Thread {
                 try {
@@ -372,7 +368,8 @@ class MainActivity : BaseActivity() {
     }
 
     private fun showSelectionDialog(
-        title: String?, options: Array<String>,
+        title: String?,
+        options: Array<String>,
         onItemSelected: Consumer<Int>,
         negativeButtonText: String?,
         onNegativeButtonClick: Runnable,
@@ -397,7 +394,6 @@ class MainActivity : BaseActivity() {
 
         val length = options.size
         if (showDefaultOption && length > 0 && length < 3) {
-            // 定义超时时间（单位：毫秒）
             val timeoutMillis: Long = 800
             Thread {
                 try {
@@ -415,7 +411,6 @@ class MainActivity : BaseActivity() {
             }.start()
         }
     }
-
 
     private fun goFriendWatch(index: Int) {
         val userEntity = userEntityArray[index]
@@ -454,26 +449,9 @@ class MainActivity : BaseActivity() {
         Log.runtime(TAG, "updateSubTitle$runType")
         baseTitle = ViewAppInfo.appTitle + "[" + runType + "]"
         when (runType) {
-            RunType.DISABLE.nickName -> setBaseTitleTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.not_active_text
-                )
-            )
-
-            RunType.ACTIVE.nickName -> setBaseTitleTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.active_text
-                )
-            )
-
-            RunType.LOADED.nickName -> setBaseTitleTextColor(
-                ContextCompat.getColor(
-                    this,
-                    R.color.textColorPrimary
-                )
-            )
+            RunType.DISABLE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.not_active_text))
+            RunType.ACTIVE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.active_text))
+            RunType.LOADED.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary))
         }
     }
 }
