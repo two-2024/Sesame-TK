@@ -1,4 +1,5 @@
-name: Android CI
+name: 📦构建普通版本
+run-name: 📦 ${{ github.actor }} @ 构建普通版本
 
 on:
   push:
@@ -14,50 +15,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set Timezone to Asia/Shanghai
+      - name: 将时区设为亚洲/上海
         run: |
           sudo timedatectl set-timezone Asia/Shanghai
           echo "Current time: $(date)"
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up JDK
+      - name: 设置 JDK
         uses: actions/setup-java@v4
         with:
           java-version: "17"
           distribution: "zulu"
           cache: gradle
 
-      - name: Set up Gradle
+      - name: 设置 Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: false
           gradle-version: wrapper
 
-      - name: Grant execute permission for gradlew
+      - name: 授予 gradlew 执行权限
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      - name: 使用 Gradle 构建
         run: ./gradlew assembleNormalRelease assembleCompatibleRelease -Pversion=${{ github.ref_name }}
 
-      - name: Locate APKs and Set Outputs
+      - name: 查找 APK 并设置输出
         id: locate_apks
         run: |
           normal_apk=$(find app/build/outputs/apk/normal/release -name "*.apk" | head -n 1)
           compatible_apk=$(find app/build/outputs/apk/compatible/release -name "*.apk" | head -n 1)
           echo "normal_apk=$normal_apk" >> $GITHUB_OUTPUT
           echo "compatible_apk=$compatible_apk" >> $GITHUB_OUTPUT
-
-      - name: Copy APKs to staging for signing
+      - name: 将 APK 复制到暂存阶段以便签名
         run: |
           mkdir -p app/build/outputs/apk/all
           cp "${{ steps.locate_apks.outputs.normal_apk }}" app/build/outputs/apk/all/
           cp "${{ steps.locate_apks.outputs.compatible_apk }}" app/build/outputs/apk/all/
-
-      - name: Sign APKs
+      - name: APK签名
         id: sign_apks
         uses: ilharp/sign-android-release@v2
         with:
@@ -68,7 +66,7 @@ jobs:
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
           buildToolsVersion: 36.0.0
 
-      - name: Extract Signed APK Paths
+      - name: 提取签名 APK 路径
         id: extract_apks
         run: |
           IFS=':' read -r -a files <<< "${{ steps.sign_apks.outputs.signedFiles }}"
@@ -79,20 +77,19 @@ jobs:
               echo "signed_compatible=$file" >> $GITHUB_OUTPUT
             fi
           done
-
-      - name: Upload APK - Compatible
+      - name: 更新安装包 - Compatible
         uses: actions/upload-artifact@v4
         with:
           name: apk-compatible
           path: ${{ steps.extract_apks.outputs.signed_compatible }}
 
-      - name: Upload APK - Normal
+      - name: 更新安装包 - Normal
         uses: actions/upload-artifact@v4
         with:
           name: apk-normal
           path: ${{ steps.extract_apks.outputs.signed_normal }}
 
-      - name: Extract file names
+      - name: 提取文件名
         id: extract_info
         run: |
           normal_file=$(basename "${{ steps.extract_apks.outputs.signed_normal }}")
@@ -102,13 +99,11 @@ jobs:
           echo "normal_file=$normal_file" >> $GITHUB_OUTPUT
           echo "compatible_file=$compatible_file" >> $GITHUB_OUTPUT
           echo "version=$version" >> $GITHUB_OUTPUT
-
-      - name: Generate APKS Checksum
+      - name: 生成sha256校验值
         run: |
           sha256sum ${{ steps.extract_apks.outputs.signed_normal }} > CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
           sha256sum ${{ steps.extract_apks.outputs.signed_compatible }} > CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-
-      - name: Get Commit Details
+      - name: 获取提交详细信息
         id: commit_details
         run: |
           COMMIT_MESSAGE_BODY=$( \
@@ -135,50 +130,46 @@ jobs:
           echo "COMMIT_MESSAGE_BODY<<EOF" >> $GITHUB_OUTPUT
           echo "$COMMIT_MESSAGE_BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Send Combined Message
+      - name: 向TG发送组合消息
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TG_CHAT_ID }}
           token: ${{ secrets.TG_BOT_TOKEN }}
           message: |
-            📦 *New Version ${{ steps.extract_info.outputs.version }} Build!*
-
+            📦 *普通新版本 ${{ steps.extract_info.outputs.version }} Build!*
             - Files: 
               - Normal: `${{ steps.extract_info.outputs.normal_file }}`
               - Compatible: `${{ steps.extract_info.outputs.compatible_file }}`
             - Branch: `${{ github.ref_name }}`
             - Triggered by: `${{ github.actor }}`
-
             *下载说明:*
               * Normal 为正常版本,适用于`Android 8.0`及以上的系统
               * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
-
             ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
           format: markdown
 
-      - name: Send Normal APK
+      - name: 向TG发送正常版本APK
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TG_CHAT_ID }}
           token: ${{ secrets.TG_BOT_TOKEN }}
           document: ${{ steps.extract_apks.outputs.signed_normal }}
 
-      - name: Send Compatible APK
+      - name: 向TG发送兼容版本APK
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TG_CHAT_ID }}
           token: ${{ secrets.TG_BOT_TOKEN }}
           document: ${{ steps.extract_apks.outputs.signed_compatible }}
 
-      - name: Create Tag from Version
+      - name: 利用版本号创建标签
         if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
         run: |
           VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
           echo "Creating tag: $VERSION_TAG"
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"
-      - name: Upload Assets to Source Release
+      - name: 将资源整合上传到你的仓库发布
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
@@ -192,31 +183,9 @@ jobs:
           append_body: true
           generate_release_notes: true
           body: |
-            ## ✨What's Changed
-
+            ## ✨普通版更新了啥？
             ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
             > ## 下载说明
               * Normal 为正常版本,适用于`Android 8.0`及以上的系统
               * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
-
             > ~~墙内不再更新~~ 倒卖必死全家
-      - name: Sync Release to Target Repository
-        uses: softprops/action-gh-release@v2
-        with:
-          repository: Xposed-Modules-Repo/fansirsqi.xposed.sesame # 目标仓库的拥有者和仓库名称
-          name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
-          files: |
-            ${{ steps.sign_normal_apk.outputs.signedFile }}
-            ${{ steps.sign_compatible_apk.outputs.signedFile }}
-            CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-            CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-          token: ${{ secrets.TARGET_REPO_PAT }}
-          tag_name: ${{ steps.extract_info.outputs.version }}
-          draft: false
-          prerelease: ${{ steps.pre_release.outputs.IS_PRERELEASE }}
-          append_body: false
-          make_latest: true
-          body: |
-            📦 本 Release 同步自源仓库 [Sesame-TK](https://github.com/${{ github.repository }})
-            ✨ **更新内容**:
-            ${{ github.event.release.body || '无更新说明' }}
