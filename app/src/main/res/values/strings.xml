@@ -202,5 +202,7 @@ If you purchased it, please contact the seller for a refund or report the seller
     <string name="extended_func">扩展功能</string>
     <string name="debug_tips">Please check the results in the debug log!</string>
     <string name="clear_photo">清空光盘行动图片💿</string>
+    <string name="all_log_file">全部日志</string>
+    <string name="error_log_file">异常日志</string>
 
 </resources>
