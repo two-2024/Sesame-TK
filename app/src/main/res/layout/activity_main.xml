@@ -201,7 +201,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <!-- 第二行按钮 -->
-        <!-- 好友看板 -->
+        <!-- 异常日志 -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_view_error_log_file"
             style="@style/Widget.AppCompat.Button.Borderless"
@@ -211,7 +211,7 @@
             android:background="@drawable/blur_button_bg"
             android:elevation="8dp"
             android:onClick="onClick"
-            android:text="@string/view_error_log_file"
+            android:text="@string/error_log_file"
             android:textColor="@android:color/white"
             android:textSize="12sp"
             app:icon="@drawable/error_log_file"
@@ -224,7 +224,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btn_forest_log" />
 
-        <!-- 其他日志（移下来） -->
+        <!-- 全部日志 -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_view_all_log_file"
             style="@style/Widget.AppCompat.Button.Borderless"
@@ -234,7 +234,7 @@
             android:background="@drawable/blur_button_bg"
             android:elevation="8dp"
             android:onClick="onClick"
-            android:text="@string/view_all_log_file"
+            android:text="@string/all_log_file"
             android:textColor="@android:color/white"
             android:textSize="12sp"
             app:icon="@drawable/all_log"
