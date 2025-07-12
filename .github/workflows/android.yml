@@ -140,15 +140,15 @@ jobs:
           token: ${{ secrets.TG_BOT_TOKEN }}
           format: markdownv2
           message: |
-            📦 *普通新版本 `${{ steps.extract_info.outputs.version }}` Build!*
-            - Files:
-              - Normal: `${{ steps.extract_info.outputs.normal_file }}`
-              - Compatible: `${{ steps.extract_info.outputs.compatible_file }}`
-            - Branch: `${{ github.ref_name }}`
-            - Triggered by: `${{ github.actor }}`
-            *下载说明:*
-              - Normal：适用于 Android 8.0+
-              - Compatible：兼容 Android 5.1~7.0
+            📦 *普通新版本 \`${{ steps.extract_info.outputs.version }}\` Build\!  
+            - Files:  
+              - Normal: \`${{ steps.extract_info.outputs.normal_file }}\`  
+              - Compatible: \`${{ steps.extract_info.outputs.compatible_file }}\`  
+            - Branch: \`${{ github.ref_name }}\`  
+            - Triggered by: \`${{ github.actor }}\`  
+            *下载说明:*  
+              - Normal：适用于 Android 8\.0\+  
+              - Compatible：兼容 Android 5\.1\~7\.0  
             ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
 
       - name: 向TG发送正常版本APK
