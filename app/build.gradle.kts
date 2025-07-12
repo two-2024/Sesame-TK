@@ -177,19 +177,19 @@ android {
     }
 
     applicationVariants.all {
-        val variant = this
-        variant.outputs.all {
-            val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
-            val dateCode = try {
-                variant.versionName.substringAfterLast("-").substring(2, 8)
-            } catch (_: Exception) {
-                "000000"
-            }
-            val fileName = "Sesame-TK-$flavorName-$dateCode-ALLG.apk"
-            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
+    val variant = this
+    variant.outputs.all {
+        val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
+        val dateCode = try {
+            variant.versionName.substringAfterLast("-").substring(0, 6)
+        } catch (_: Exception) {
+            "000000"
         }
+        val fileName = "Sesame-TK-$flavorName-$dateCode-ALLG.apk"
+        (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
     }
 }
+
 
 dependencies {
     implementation(libs.ui.tooling.preview.android)
