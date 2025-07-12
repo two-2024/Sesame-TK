@@ -50,14 +50,12 @@ android {
             if (process.exitValue() == 0) {
                 output.toInt()
             } else {
-                val error = process.errorStream.bufferedReader().use { it.readText() }
-                println("Git error: $error")
-                "1".toInt()
+                println("Git error: ${process.errorStream.bufferedReader().readText()}")
+                1
             }
         } catch (_: Exception) {
-            "1".toInt()
+            1
         }
-
 
         versionCode = gitCommitCount
         versionName = if (buildTag.contains("alpha") || buildTag.contains("beta")) {
@@ -88,7 +86,6 @@ android {
         compose = true
     }
 
-
     flavorDimensions += "default"
     productFlavors {
         create("normal") {
@@ -100,12 +97,13 @@ android {
             extra.set("applicationType", "Compatible")
         }
     }
+
     compileOptions {
-        // 全局默认设置
-        isCoreLibraryDesugaringEnabled = true // 启用脱糖
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlin {
         compilerOptions {
             jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
@@ -125,7 +123,6 @@ android {
                     }
                 }
             }
-
             "compatible" -> {
                 compileOptions {
                     sourceCompatibility = JavaVersion.VERSION_11
@@ -141,8 +138,7 @@ android {
     }
 
     signingConfigs {
-        getByName("debug") {
-        }
+        getByName("debug") {}
     }
 
     buildTypes {
@@ -168,6 +164,7 @@ android {
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }
+
     val cmakeFile = file("src/main/cpp/CMakeLists.txt")
     if (!System.getenv("CI").toBoolean() && cmakeFile.exists()) {
         externalNativeBuild {
@@ -183,7 +180,12 @@ android {
         val variant = this
         variant.outputs.all {
             val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
-            val fileName = "Sesame-TK-$flavorName-${variant.versionName}.apk"
+            val dateCode = try {
+                variant.versionName.substringAfterLast("-").substring(2, 8)
+            } catch (_: Exception) {
+                "000000"
+            }
+            val fileName = "Sesame-TK-$flavorName-$dateCode-ALLG.apk"
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
     }
@@ -198,20 +200,13 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
-
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
-
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("org.nanohttpd:nanohttpd:2.3.1")
-
-
     implementation(libs.androidx.constraintlayout)
-
     implementation(libs.activity.compose)
-
     implementation(libs.core.ktx)
     implementation(libs.kotlin.stdlib)
     implementation(libs.slf4j.api)
@@ -226,13 +221,10 @@ dependencies {
     annotationProcessor(libs.lombok)
     implementation(libs.okhttp)
     implementation(libs.dexkit)
-
     coreLibraryDesugaring(libs.desugar)
-
     add("normalImplementation", libs.jackson.core)
     add("normalImplementation", libs.jackson.databind)
     add("normalImplementation", libs.jackson.annotations)
-
     add("compatibleImplementation", libs.jackson.core.compatible)
     add("compatibleImplementation", libs.jackson.databind.compatible)
     add("compatibleImplementation", libs.jackson.annotations.compatible)
