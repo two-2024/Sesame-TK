@@ -1,4 +1,5 @@
-<androidx.constraintlayout.widget.ConstraintLayout
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -21,15 +22,31 @@
         app:srcCompat="@drawable/main"
         tools:ignore="ImageContrastCheck,MissingConstraints,UsingOnClickInXml" />
 
-    <!-- 标题栏 -->
-    <include
-        layout="@layout/base_title"
+    <!-- 标题栏，直接嵌入 -->
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/base_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:fitsSystemWindows="true"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:fitsSystemWindows="true">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/x_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?actionBarSize"
+                android:minHeight="?attr/actionBarSize"
+                app:layout_scrollFlags="scroll|enterAlways"
+                android:theme="@style/MenuTheme" />
+        </com.google.android.material.appbar.AppBarLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- ComposeView 设备信息 -->
     <androidx.compose.ui.platform.ComposeView
