@@ -189,6 +189,7 @@ android {
         (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
     }
 }
+}
 
 
 dependencies {
