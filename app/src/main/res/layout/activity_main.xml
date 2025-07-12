@@ -57,32 +57,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:ignore="UsingOnClickInXml" />
-    <!-- 作者信息 -->
-
-    <!-- 官方声明 -->
-
-    <TextView
-        android:id="@+id/build_author"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="sans-serif-smallcaps"
-        android:gravity="center"
-        android:text="ALLG编译，与原版保持一致。👑"
-        android:textAlignment="center"
-        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-        android:textColor="#FFD700"
-        android:textSize="14sp"
-        tools:layout_editor_absoluteX="101dp"
-        tools:layout_editor_absoluteY="350dp" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/bottom_button_container"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
 
         <!-- 第一行三个按钮 -->
         <com.google.android.material.button.MaterialButton
@@ -112,7 +86,7 @@
             style="@style/Widget.App.Button.Main"
             android:background="@drawable/blur_button_bg"
             android:onClick="onClick"
-            android:text="@string/other_log"
+            android:text="@string/visit_github"
             app:icon="@drawable/github"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/btn_farm_log"
@@ -124,7 +98,7 @@
             style="@style/Widget.App.Button.Main"
             android:background="@drawable/blur_button_bg"
             android:onClick="onClick"
-            android:text="@string/friend_watch"
+            android:text="@string/error_log_file"
             app:icon="@drawable/error_log_file"
             app:layout_constraintEnd_toStartOf="@id/btn_view_all_log_file"
             app:layout_constraintStart_toStartOf="parent"
@@ -135,7 +109,7 @@
             style="@style/Widget.App.Button.Main"
             android:background="@drawable/blur_button_bg"
             android:onClick="onClick"
-            android:text="@string/visit_github"
+            android:text="@string/all_log_file"
             app:icon="@drawable/all_log"
             app:layout_constraintEnd_toStartOf="@id/btn_settings"
             app:layout_constraintStart_toEndOf="@id/btn_view_error_log_file"
@@ -153,19 +127,5 @@
             app:layout_constraintTop_toBottomOf="@id/btn_github" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <TextView
-        android:id="@+id/message"
-        android:layout_width="329dp"
-        android:layout_height="134dp"
-        android:fontFamily="sans-serif-smallcaps"
-        android:gravity="center"
-        android:text="@string/app_disclaimer"
-        android:textAlignment="center"
-        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-        android:textColor="@android:color/holo_red_dark"
-        android:textSize="14sp"
-        tools:layout_editor_absoluteX="41dp"
-        tools:layout_editor_absoluteY="371dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
