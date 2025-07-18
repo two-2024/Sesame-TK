@@ -504,24 +504,22 @@ private boolean useMealCardTool() {
     }
 
     try {
-        // 先获取当前工具列表
         String toolListJson = AntFarmRpcCall.listFarmTool();
         JSONObject json = new JSONObject(toolListJson);
         if (!json.optBoolean("success", false)) {
-            Log.e(TAG, "获取工具列表失败");
+            Log.record(TAG, "获取工具列表失败");
             return false;
         }
 
         JSONArray tools = json.optJSONArray("toolList");
         if (tools == null) {
-            Log.e(TAG, "工具列表为空");
+            Log.record(TAG, "工具列表为空");
             return false;
         }
 
         String mealCardToolId = null;
         String mealCardToolType = null;
 
-        // 遍历查找“加饭卡”工具，示例用toolType = "MEAL_CARD_TOOL"，根据实际替换
         for (int i = 0; i < tools.length(); i++) {
             JSONObject tool = tools.getJSONObject(i);
             String toolType = tool.optString("toolType");
@@ -535,9 +533,26 @@ private boolean useMealCardTool() {
         }
 
         if (mealCardToolId == null || mealCardToolType == null) {
-            Log.i(TAG, "未找到加饭卡工具或数量不足");
+            Log.record(TAG, "未找到加饭卡工具或数量不足");
             return false;
         }
+
+        String result = AntFarmRpcCall.useFarmTool(Status.ownerFarmId, mealCardToolId, mealCardToolType);
+        JSONObject resultJson = new JSONObject(result);
+        boolean success = resultJson.optBoolean("success", false);
+        if (success) {
+            Status.useMealCardTool();
+            Log.record(TAG, "成功使用加饭卡");
+            return true;
+        } else {
+            Log.record(TAG, "使用加饭卡失败: " + resultJson.optString("memo"));
+            return false;
+        }
+    } catch (Exception e) {
+        Log.printStackTrace(e);
+        return false;
+    }
+}
 
         // 调用使用道具接口
         String result = AntFarmRpcCall.useFarmTool(Status.getOwnerFarmId(), mealCardToolId, mealCardToolType);
@@ -545,10 +560,10 @@ private boolean useMealCardTool() {
         boolean success = resultJson.optBoolean("success", false);
         if (success) {
             Status.useMealCardTool();
-            Log.i(TAG, "成功使用加饭卡");
+            Log.record(TAG, "成功使用加饭卡");
             return true;
         } else {
-            Log.e(TAG, "使用加饭卡失败: " + resultJson.optString("memo"));
+            Log.record(TAG, "使用加饭卡失败: " + resultJson.optString("memo"));
             return false;
         }
 
