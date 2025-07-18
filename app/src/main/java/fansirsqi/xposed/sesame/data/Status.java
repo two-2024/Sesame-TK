@@ -263,10 +263,6 @@ public static void markMealCardToolUsed() {
         }
     }
 
-    public static boolean canUseAccelerateTool() {
-        return getINSTANCE().useAccelerateToolCount < 8;
-    }
-
     public static void useAccelerateTool() {
         getINSTANCE().useAccelerateToolCount += 1;
         save();
