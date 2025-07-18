@@ -112,6 +112,8 @@ public class AntFarm extends ModelTask {
     private static final String ANSWERED_FLAG = "farmQuestion::answered"; // 今日是否已答题
     private static final String CACHED_FLAG = "farmQuestion::cache";     // 是否已缓存明日答案
 
+    // 自动使用加饭卡 | 开关
+    private BooleanModelField autoUseFeedTool;
     /**
      * 小鸡睡觉时间
      */
@@ -233,6 +235,7 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
+        modelFields.addField(autoUseFeedTool = new BooleanModelField("autoUseFeedTool", "加饭卡 | 使用", false));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -386,6 +389,55 @@ public class AntFarm extends ModelTask {
             Log.record(TAG, "执行结束-蚂蚁" + getName());
         }
     }
+
+    
+    private void updateFeedToolMap() {
+    feedToolMap.clear();
+    if (farmTools == null) return;
+    for (FarmTool tool : farmTools) {
+        if ("FEEDTOOL".equals(tool.getToolType()) || "加饭卡".equals(tool.getToolName())) {
+            feedToolMap.put(tool.getToolId(), tool.getToolCount());
+        }
+    }
+    Log.i(TAG, "更新加饭卡工具列表：" + feedToolMap);
+}
+    private void feedAndUseFeedTool(String farmId) {
+    if (!autoUseFeedTool.getValue()) {
+        Log.i(TAG, "自动使用加饭卡功能未启用");
+        return;
+    }
+    if (feedToolMap.isEmpty()) {
+        Log.i(TAG, "无可用加饭卡");
+        return;
+    }
+
+    try {
+        // 先喂饲料
+        String feedResult = AntFarmRpcCall.feedAnimal(farmId);
+        if (feedResult == null || !feedResult.contains("SUCCESS")) {
+            Log.w(TAG, "喂饲料失败，不使用加饭卡");
+            return;
+        }
+        Log.i(TAG, "喂饲料成功，准备使用加饭卡");
+
+        // 依次尝试使用加饭卡
+        for (Map.Entry<String, Integer> entry : feedToolMap.entrySet()) {
+            String toolId = entry.getKey();
+            int count = entry.getValue();
+            if (count > 0) {
+                String useResult = AntFarmRpcCall.useFarmTool(farmId, toolId, "FEEDTOOL");
+                if (useResult != null && useResult.contains("SUCCESS")) {
+                    Log.i(TAG, "成功使用加饭卡，toolId=" + toolId);
+                    break;
+                } else {
+                    Log.w(TAG, "使用加饭卡失败，toolId=" + toolId);
+                }
+            }
+        }
+    } catch (Exception e) {
+        Log.e(TAG, "feedAndUseFeedTool 执行异常", e);
+    }
+}
 
 
     /**
