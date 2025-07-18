@@ -753,7 +753,7 @@ public class AntFarmToolUtil {
         }
         // 2. 判断是否需要使用加饭卡道具
         if (useMealCardTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
-    if (useMealCardTool()) {
+    if (AntFarmToolUtil.useMealCardTool()) {  // 调用工具方法，避免混淆
         needReload = true;
     }
 }
