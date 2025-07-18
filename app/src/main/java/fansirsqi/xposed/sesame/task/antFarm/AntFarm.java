@@ -72,6 +72,10 @@ public class AntFarm extends ModelTask {
     private int foodStockLimit;
     private String rewardProductNum;
     private RewardFriend[] rewardList;
+     /**
+     * 加饭卡
+     */
+    private BooleanModelField useMealCardTool;
     /**
      * 慈善评分
      */
@@ -233,6 +237,7 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
+        modelFields.addField(useMealCardTool = new BooleanModelField("useMealCardTool", "加饭卡 | 使用", false));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -488,6 +493,36 @@ public class AntFarm extends ModelTask {
         }
     }
 
+    /**
+ * 使用加饭卡道具
+ *
+ * @return true 表示成功使用，false 表示失败或不允许使用
+ */
+private boolean useMealCardTool() {
+    if (!Status.canUseMealCardTool()) {
+        return false;
+    }
+    // 这里示例调用RPC接口的方法，具体根据你项目调整
+    boolean result = false;
+    try {
+        // 伪代码示例：
+        // result = AntFarmRpcCall.useMealCard(ownerFarmId);
+        // 你需要根据项目已有RPC调用加饭卡接口的方法改写
+
+        // 假设调用成功：
+        result = true;
+
+    } catch (Exception e) {
+        Log.printStackTrace(e);
+    }
+    if (result) {
+        Status.useMealCardTool();
+        Log.record(TAG, "成功使用加饭卡");
+    }
+    return result;
+}
+
+
     private boolean exchangeBenefit(String spuId) {
         try {
             JSONObject jo = new JSONObject(AntFarmRpcCall.getMallItemDetail(spuId));
@@ -677,21 +712,27 @@ public class AntFarm extends ModelTask {
                 }
             }
         }
+        // 2. 判断是否需要使用加饭卡道具
+        if (useMealCardTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
+    if (useMealCardTool()) {
+        needReload = true;
+    }
+}
 
-        // 2. 判断是否需要使用加速道具
+        // 3. 判断是否需要使用加速道具
         if (useAccelerateTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
             if (useAccelerateTool()) {
                 needReload = true;
             }
         }
 
-        // 3. 如果有操作导致状态变化，则刷新庄园信息
+        // 4. 如果有操作导致状态变化，则刷新庄园信息
         if (needReload) {
             enterFarm();
             syncAnimalStatus(ownerFarmId);
         }
 
-        // 4. 计算并安排下一次自动喂食任务
+        // 5. 计算并安排下一次自动喂食任务
         try {
             Long startEatTime = ownerAnimal.startEatTime;
             double allFoodHaveEatten = 0d;
@@ -718,7 +759,7 @@ public class AntFarm extends ModelTask {
             Log.printStackTrace(e);
         }
 
-        // 5. 其他功能（换装、领取饲料）
+        // 6. 其他功能（换装、领取饲料）
         // 小鸡换装
         if (listOrnaments.getValue() && Status.canOrnamentToday()) {
             listOrnaments();
