@@ -396,68 +396,75 @@ public class AntFarm extends ModelTask {
         }
     }
 
-    @Override
-public void initData() {
-    scheduleFeedToolTasks();
-}
-
 private void scheduleFeedToolTasks() {
     if (!autoUseFeedTool.getValue()) {
         Log.runtime(TAG, "加饭卡自动使用未开启");
         return;
     }
 
-    List<String> timeList = feedToolUseTime.getValueList();
+    List<String> timeList = feedToolUseTime.getValue(); 
     if (timeList == null || timeList.isEmpty()) return;
 
     for (String timeStr : timeList) {
-        Calendar calendar = TimeUtil.getTodayCalendarByTimeStr(timeStr);
-        if (calendar == null) {
-            Log.record(TAG, "加饭卡时间格式错误：" + timeStr);
-            continue;
-        }
+        scheduleSingleFeedToolTask(timeStr);
+    }
+}
 
-        // 时间已过则顺延到明天
-        if (System.currentTimeMillis() > calendar.getTimeInMillis()) {
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-        }
+private void scheduleSingleFeedToolTask(String timeStr) {
+    Calendar calendar = TimeUtil.getTodayCalendarByTimeStr(timeStr);
+    if (calendar == null) {
+        Log.record(TAG, "加饭卡时间格式错误：" + timeStr);
+        return;
+    }
 
-        long triggerTime = calendar.getTimeInMillis();
-        String taskId = "FeedToolUse|" + timeStr;
+    // 如果时间已过，顺延到明天
+    if (System.currentTimeMillis() > calendar.getTimeInMillis()) {
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+    }
 
-        if (!hasChildTask(taskId)) {
-            addChildTask(new ChildModelTask(taskId, "FTU", () -> {
-                if (Status.canUseFeedTool() && Status.isFeedBowlHasFood()) {
-                    useFarmTool(ownerFarmId, ToolType.FEED);
-                    Log.record(TAG, "自动使用加饭卡@" + timeStr);
-                } else {
-                    Log.runtime(TAG, "加饭卡无法使用或无食物");
-                }
-                // 续约下一天任务
-                rescheduleFeedToolTask(timeStr);
-            }, triggerTime));
+    long triggerTime = calendar.getTimeInMillis();
+    String taskId = "FeedToolUse|" + timeStr;
 
-            Log.record(TAG, "添加定时加饭卡任务[" + UserMap.getCurrentMaskName() + "]在[" + TimeUtil.getCommonDate(triggerTime) + "]执行");
-        }
+    if (!hasChildTask(taskId)) {
+        addChildTask(new ChildModelTask(taskId, "FTU", () -> {
+            if (Status.canUseFeedTool() && Status.isFeedBowlHasFood()) {
+                useFarmTool(ownerFarmId, ToolType.FEED);
+                Log.record(TAG, "自动使用加饭卡@" + timeStr);
+            } else {
+                Log.runtime(TAG, "加饭卡无法使用或无食物@" + timeStr);
+            }
+
+            // 执行完后重新调度明天
+            rescheduleFeedToolTask(timeStr);
+
+        }, triggerTime));
+
+        Log.record(TAG, "添加定时加饭卡任务[" + UserMap.getCurrentMaskName() + "]将在[" + TimeUtil.getCommonDate(triggerTime) + "]执行");
     }
 }
 
 private void rescheduleFeedToolTask(String timeStr) {
-    Calendar nextTime = TimeUtil.getTodayCalendarByTimeStr(timeStr);
-    if (nextTime != null) {
-        nextTime.add(Calendar.DAY_OF_MONTH, 1);
-        String taskId = "FeedToolUse|" + timeStr;
-        addChildTask(new ChildModelTask(taskId, "FTU", () -> {
-            if (Status.canUseFeedTool() && Status.isFeedBowlHasFood()) {
-                useFarmTool(ownerFarmId, ToolType.FEED);
-                Log.record(TAG, "自动使用加饭卡@" + timeStr + "（续约）");
-            } else {
-                Log.runtime(TAG, "加饭卡无法使用或无食物（续约）");
-            }
-            rescheduleFeedToolTask(timeStr); // 继续续约
-        }, nextTime.getTimeInMillis()));
-        Log.record(TAG, "续约加饭卡任务[" + UserMap.getCurrentMaskName() + "]在[" + TimeUtil.getCommonDate(nextTime.getTimeInMillis()) + "]执行");
-    }
+    removeChildTask("FeedToolUse|" + timeStr); // 清理旧任务
+    Calendar calendar = TimeUtil.getTodayCalendarByTimeStr(timeStr);
+    if (calendar == null) return;
+
+    calendar.add(Calendar.DAY_OF_MONTH, 1);
+    long nextTime = calendar.getTimeInMillis();
+    String taskId = "FeedToolUse|" + timeStr;
+
+    addChildTask(new ChildModelTask(taskId, "FTU", () -> {
+        if (Status.canUseFeedTool() && Status.isFeedBowlHasFood()) {
+            useFarmTool(ownerFarmId, ToolType.FEED);
+            Log.record(TAG, "自动使用加饭卡@" + timeStr);
+        } else {
+            Log.runtime(TAG, "加饭卡无法使用或无食物@" + timeStr);
+        }
+
+        rescheduleFeedToolTask(timeStr); // 继续下一轮
+
+    }, nextTime));
+
+    Log.record(TAG, "续约定时加饭卡任务将在[" + TimeUtil.getCommonDate(nextTime) + "]执行");
 }
 
     /**
