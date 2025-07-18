@@ -24,10 +24,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import fansirsqi.xposed.sesame.BuildConfig
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 
@@ -80,18 +79,18 @@ fun DeviceInfoCard(info: Map<String, String>) {
                                 )
                         )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    // 加一行红色自定义文字
-                    Text(
-                        text = "ALLG编译，与原版保持一致。👑",
-                        fontSize = 12.sp,
-                        color = Color.Red
-                    )
-                } else {
-                    Text(text = "$label: $value", fontSize = 14.sp)
+                    else -> {
+                        Text(text = "$label: $value", fontSize = 14.sp)
+                    }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
             }
+            // 循环外单独显示红色自定义文字
+            Text(
+                text = "ALLG编译，与原版保持一致。👑",
+                fontSize = 12.sp,
+                color = Color.Red
+            )
         }
     }
 }
