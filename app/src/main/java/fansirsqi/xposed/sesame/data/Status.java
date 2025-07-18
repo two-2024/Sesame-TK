@@ -48,23 +48,14 @@ public class Status {
     private Set<String> donationEggList = new HashSet<>();
     private int useAccelerateToolCount = 0;
     private int useMealCardToolCount = 0;//加饭卡
-    private static boolean canUseMealCardTool = true;  // 这里是示例，实际可根据条件控制
-    private static String ownerFarmId = "10170831141957012088902407466501"; // 你的农场ID
-
     public static boolean canUseMealCardTool() {
-        return canUseMealCardTool;
-    }
-
-    public static String getOwnerFarmId() {
-        return ownerFarmId;
-    }
-
-    public static void useMealCardTool() {
-        // 标记已使用或减少计数，具体看你实现
-        canUseMealCardTool = false;
-        // 或者增加其它逻辑
-    }
+    return !getBoolean("usedMealCardToday");
 }
+
+public static void markMealCardToolUsed() {
+    putBoolean("usedMealCardToday", true);
+}
+
     /**
      * 小鸡换装
      */
