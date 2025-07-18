@@ -1,11 +1,15 @@
 package fansirsqi.xposed.sesame.util
 
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.clickable
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,29 +31,18 @@ import androidx.compose.ui.unit.sp
 import fansirsqi.xposed.sesame.BuildConfig
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 
-// 中文字段映射（key为英文，value为中文）
-private val fieldNameMap = mapOf(
-    "Product" to "产品",
-    "Device" to "型号",
-    "System" to "系统",
-    "OS Build" to "构建",
-    "OTA" to "OTA版本",
-    "Android ID" to "Android ID",
-    "Module Version" to "模块版本",
-    "Module Build" to "构建时间"
-)
-
 class PreviewDeviceInfoProvider : PreviewParameterProvider<Map<String, String>> {
     override val values: Sequence<Map<String, String>> = sequenceOf(
         mapOf(
-            "Device" to "Pixel 6",
-            "Product" to "Google Pixel",
+            "型号" to "Pixel 6",
+            "产品" to "Google Pixel",
             "Android ID" to "abcd1234567890ef",
-            "System" to "Android 13 (33)",
-            "OS Build" to "UQ1A.230105.002 S1B51",
+            "系统" to "Android 13 (33)",
+            "构建" to "UQ1A.230105.002 S1B51",
             "OTA" to "OTA-12345",
-            "Module Version" to "v1.0.0-release 📦",
-            "Module Build" to "2023-10-01 12:00 ⏰"
+            "SN" to "SN1234567890",
+            "模块版本" to "v1.0.0-release 📦",
+            "构建日期" to "2023-10-01 12:00 ⏰"
         )
     )
 }
@@ -62,21 +56,31 @@ fun DeviceInfoCard(info: Map<String, String>) {
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            info.forEach { (key, value) ->
-                val label = fieldNameMap[key] ?: key // 先映射中文标签，没映射用key
-
-                if (key == "Android ID") {
-                    var showFull by remember { mutableStateOf(false) }
-                    val displayValue = if (showFull) value else "***********"
-                    Text(
-                        text = "$label: $displayValue",
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clickable { showFull = !showFull }
-                    )
-                } else if (key == "Module Build") {
+            info.forEach { (label, value) ->
+                when (label) {
+                    "Device ID" -> {
+                        var showFull by remember { mutableStateOf(false) }
+                        val displayValue = if (showFull) value else "***********"
+                        val context = LocalContext.current
+                        Text(
+                            text = "$label: $displayValue",
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable { showFull = !showFull }
+                                .combinedClickable(
+                                    onClick = { showFull = !showFull },
+                                    onLongClick = {
+                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                        val clip = ClipData.newPlainText("Android ID", value)
+                                        clipboard.setPrimaryClip(clip)
+                                        Toast.makeText(context, "Device ID copied", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                        )
+                    }
+                else if (key == "Module Build") {
                     Text(
                         text = "$label: $value",
                         fontSize = 14.sp,
@@ -97,7 +101,7 @@ fun DeviceInfoCard(info: Map<String, String>) {
         }
     }
 }
-
+}
 object DeviceInfoUtil {
     @SuppressLint("HardwareIds")
     fun getDeviceInfo(context: Context): Map<String, String> {
@@ -131,7 +135,7 @@ object DeviceInfoUtil {
             "System" to "Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})",
             "OS Build" to "${Build.ID} ${Build.DISPLAY}",
             "OTA" to getProp("ro.build.version.ota"),
-            "Android ID" to androidId,
+            "Device ID" to androidId,
             "Module Version" to "${BuildConfig.VERSION}-${BuildConfig.BUILD_TAG}.${BuildConfig.BUILD_TYPE} 📦",
             "Module Build" to "${BuildConfig.BUILD_DATE} ${BuildConfig.BUILD_TIME} ⏰"
         )
