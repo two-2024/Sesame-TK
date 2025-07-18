@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.util.Consumer
 import androidx.lifecycle.lifecycleScope
+import fansirsqi.xposed.sesame.BuildConfig
 import fansirsqi.xposed.sesame.R
 import fansirsqi.xposed.sesame.data.General
 import fansirsqi.xposed.sesame.data.RunType
@@ -66,7 +67,6 @@ class MainActivity : BaseActivity() {
             return
         }
         setContentView(R.layout.activity_main)
-        val mainImage = findViewById<View>(R.id.main_image)
         oneWord = findViewById(R.id.one_word)
         val deviceInfo: ComposeView = findViewById(R.id.device_info)
         deviceInfo.setContent {
@@ -92,19 +92,6 @@ class MainActivity : BaseActivity() {
             Detector.initDetector(this)
         } catch (e: Exception) {
             Log.error(TAG, "load libSesame err:" + e.message)
-        }
-
-        mainImage?.setOnLongClickListener { v: View ->
-            if (v.id == R.id.main_image) {
-                val data = "file://" + Files.getDebugLogFile().absolutePath
-                val it = Intent(this@MainActivity, HtmlViewerActivity::class.java)
-                it.putExtra("nextLine", false)
-                it.putExtra("canClear", true)
-                it.data = data.toUri()
-                startActivity(it)
-                return@setOnLongClickListener true
-            }
-            false
         }
         lifecycleScope.launch {
             val result = FansirsqiUtil.getOneWord()
@@ -154,11 +141,6 @@ class MainActivity : BaseActivity() {
     }
 
     fun onClick(v: View) {
-        if (v.id == R.id.main_image) {
-            updateSubTitle(RunType.LOADED.nickName)
-            ToastUtil.showToastWithDelay(this, "再点就要去了.~a.e", 800)
-            return
-        }
         var data = "file://"
         val id = v.id
         when (id) {
@@ -218,7 +200,7 @@ class MainActivity : BaseActivity() {
             menu.add(0, 7, 7, R.string.view_capture)
             menu.add(0, 8, 8, R.string.extend)
             menu.add(0, 9, 9, R.string.settings)
-            if (ViewAppInfo.isApkInDebug) {
+            if (BuildConfig.DEBUG) {
                 menu.add(0, 10, 10, "清除配置")
             }
         } catch (e: Exception) {
