@@ -72,9 +72,8 @@ public class AntFarm extends ModelTask {
     private int foodStockLimit;
     private String rewardProductNum;
     private RewardFriend[] rewardList;
-     /**
-     * 加饭卡
-     */
+    
+     /// 是否使用加饭卡
     private BooleanModelField useMealCardTool;
     /**
      * 慈善评分
@@ -237,7 +236,7 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
-        modelFields.addField(useMealCardTool = new BooleanModelField("useMealCardTool", "加饭卡 | 使用", false));
+        modelFields.addField(useMealCardTool = new BooleanModelField("useMealCardTool", "使用加饭卡", false));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -327,6 +326,12 @@ public class AntFarm extends ModelTask {
             if (useNewEggCard.getValue()) {
                 useFarmTool(ownerFarmId, ToolType.NEWEGGTOOL);
                 syncAnimalStatus(ownerFarmId);
+            }
+            // 加入使用加饭卡的逻辑
+            if (useMealCardTool.getValue()) {
+             if (useMealCardTool()) {
+              syncAnimalStatus(ownerFarmId);
+              }
             }
             if (harvestProduce.getValue() && benevolenceScore >= 1) {
                 Log.record(TAG, "有可收取的爱心鸡蛋");
@@ -494,69 +499,27 @@ public class AntFarm extends ModelTask {
     }
 
 /**
- * 从工具列表中找出加饭卡工具（示例 toolType: "MEAL_CARD_TOOL"），并调用使用接口
+ * 使用加饭卡
  *
- * @return true 表示成功使用，false 表示失败或没有该工具
+ * @return true: 使用成功，false: 使用失败
  */
-private boolean useMealCardTool() {
+private Boolean useMealCardTool() {
     if (!Status.canUseMealCardTool()) {
         return false;
     }
-
-
-    try {
-        // 先获取当前工具列表
-        String toolListJson = AntFarmRpcCall.listFarmTool();
-        JSONObject json = new JSONObject(toolListJson);
-        if (!json.optBoolean("success", false)) {
-            Log.record(TAG, "获取工具列表失败");
-            return false;
-        }
-
-        JSONArray tools = json.optJSONArray("toolList");
-        if (tools == null) {
-            Log.record(TAG, "工具列表为空");
-            return false;
-        }
-
-        String mealCardToolId = null;
-        String mealCardToolType = null;
-
-        // 遍历查找“加饭卡”工具，示例用toolType = "MEAL_CARD_TOOL"，根据实际替换
-        for (int i = 0; i < tools.length(); i++) {
-            JSONObject tool = tools.getJSONObject(i);
-            String toolType = tool.optString("toolType");
-            int toolCount = tool.optInt("toolCount", 0);
-
-            if ("MEAL_CARD_TOOL".equals(toolType) && toolCount > 0) {
-                mealCardToolId = tool.optString("toolId");
-                mealCardToolType = toolType;
-                break;
-            }
-        }
-
-        if (mealCardToolId == null || mealCardToolType == null) {
-            Log.record(TAG, "未找到加饭卡工具或数量不足");
-            return false;
-        }
-
-        // 调用使用道具接口
-        String result = AntFarmRpcCall.useFarmTool(Status.getOwnerFarmId(), mealCardToolId, mealCardToolType);
-        JSONObject resultJson = new JSONObject(result);
-        boolean success = resultJson.optBoolean("success", false);
-        if (success) {
-            Status.useMealCardTool();
-            Log.record(TAG, "成功使用加饭卡");
-            return true;
-        } else {
-            Log.record(TAG, "使用加饭卡失败: " + resultJson.optString("memo"));
-            return false;
-        }
-
-    } catch (Exception e) {
-        Log.printStackTrace(e);
+    // 饿的时候才使用
+    if (!"HUNGRY".equals(ownerAnimal.animalFeedStatus)) {
         return false;
     }
+
+    boolean result = useFarmTool(FarmToolType.BIG_EATER_TOOL);
+    if (result) {
+        Log.record(TAG, "使用了加饭卡");
+        Status.markMealCardToolUsed();
+    }
+    return result;
+}
+
 
     private boolean exchangeBenefit(String spuId) {
         try {
