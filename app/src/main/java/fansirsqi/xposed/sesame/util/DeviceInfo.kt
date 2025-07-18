@@ -80,12 +80,6 @@ fun DeviceInfoCard(info: Map<String, String>) {
                                 )
                         )
                     }
-                else if (key == "Module Build") {
-                    Text(
-                        text = "$label: $value",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
                     Spacer(modifier = Modifier.height(4.dp))
                     // 加一行红色自定义文字
                     Text(
@@ -101,7 +95,7 @@ fun DeviceInfoCard(info: Map<String, String>) {
         }
     }
 }
-}
+
 object DeviceInfoUtil {
     @SuppressLint("HardwareIds")
     fun getDeviceInfo(context: Context): Map<String, String> {
