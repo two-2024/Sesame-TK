@@ -116,6 +116,7 @@ object DeviceInfoUtil {
 
         fun getDeviceName(): String {
             val candidates = listOf(
+                "ro.product.odm.model",
                 "ro.product.marketname",
                 "ro.product.odm.device",
                 "ro.product.brand"
@@ -132,9 +133,8 @@ object DeviceInfoUtil {
         return mapOf(
             "Product" to "${Build.MANUFACTURER} ${Build.PRODUCT}",
             "Device" to getDeviceName(),
-            "System" to "Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT})",
-            "OS Build" to "${Build.ID} ${Build.DISPLAY}",
-            "OTA" to getProp("ro.build.version.ota"),
+            "Android Version" to "${Build.VERSION.RELEASE} SDK (${Build.VERSION.SDK_INT})",
+            "OS Build" to "${Build.DISPLAY}",
             "Device ID" to androidId,
             "Module Version" to "${BuildConfig.VERSION}-${BuildConfig.BUILD_TAG}.${BuildConfig.BUILD_TYPE} 📦",
             "Module Build" to "${BuildConfig.BUILD_DATE} ${BuildConfig.BUILD_TIME} ⏰"
