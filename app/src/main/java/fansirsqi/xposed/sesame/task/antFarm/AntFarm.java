@@ -114,6 +114,8 @@ public class AntFarm extends ModelTask {
 
     // 自动使用加饭卡 | 开关
     private BooleanModelField autoUseFeedTool;
+    private final Map<String, Integer> feedToolMap = new LinkedHashMap<>();
+    
     /**
      * 小鸡睡觉时间
      */
@@ -399,46 +401,45 @@ public class AntFarm extends ModelTask {
             feedToolMap.put(tool.getToolId(), tool.getToolCount());
         }
     }
-    Log.i(TAG, "更新加饭卡工具列表：" + feedToolMap);
+    Log.record(TAG, "更新加饭卡工具列表：" + feedToolMap);
 }
     private void feedAndUseFeedTool(String farmId) {
     if (!autoUseFeedTool.getValue()) {
-        Log.i(TAG, "自动使用加饭卡功能未启用");
+        Log.record(TAG, "自动使用加饭卡功能未启用");
         return;
     }
     if (feedToolMap.isEmpty()) {
-        Log.i(TAG, "无可用加饭卡");
+        Log.record(TAG, "无可用加饭卡");
         return;
     }
 
     try {
-        // 先喂饲料
-        String feedResult = AntFarmRpcCall.feedAnimal(farmId);
-        if (feedResult == null || !feedResult.contains("SUCCESS")) {
-            Log.w(TAG, "喂饲料失败，不使用加饭卡");
+        // 检查饭盆是否有饲料（是否可以喂）
+        boolean hasFeed = checkHasFeed(farmId);
+        if (!hasFeed) {
+            Log.record(TAG, "饭盆中没有饲料，无法使用加饭卡");
             return;
         }
-        Log.i(TAG, "喂饲料成功，准备使用加饭卡");
 
-        // 依次尝试使用加饭卡
+        Log.record(TAG, "饭盆有饲料，准备使用加饭卡");
+
         for (Map.Entry<String, Integer> entry : feedToolMap.entrySet()) {
             String toolId = entry.getKey();
             int count = entry.getValue();
             if (count > 0) {
                 String useResult = AntFarmRpcCall.useFarmTool(farmId, toolId, "FEEDTOOL");
                 if (useResult != null && useResult.contains("SUCCESS")) {
-                    Log.i(TAG, "成功使用加饭卡，toolId=" + toolId);
+                    Log.record(TAG, "成功使用加饭卡，toolId=" + toolId);
                     break;
                 } else {
-                    Log.w(TAG, "使用加饭卡失败，toolId=" + toolId);
+                    Log.record(TAG, "使用加饭卡失败，toolId=" + toolId);
                 }
             }
         }
     } catch (Exception e) {
-        Log.e(TAG, "feedAndUseFeedTool 执行异常", e);
+        Log.record(TAG, "feedAndUseFeedTool 执行异常", e);
     }
 }
-
 
     /**
      * 召回小鸡
