@@ -504,6 +504,7 @@ private boolean useMealCardTool() {
     }
 
     try {
+        // 先获取当前工具列表
         String toolListJson = AntFarmRpcCall.listFarmTool();
         JSONObject json = new JSONObject(toolListJson);
         if (!json.optBoolean("success", false)) {
@@ -520,6 +521,7 @@ private boolean useMealCardTool() {
         String mealCardToolId = null;
         String mealCardToolType = null;
 
+        // 遍历查找“加饭卡”工具，示例用toolType = "MEAL_CARD_TOOL"，根据实际替换
         for (int i = 0; i < tools.length(); i++) {
             JSONObject tool = tools.getJSONObject(i);
             String toolType = tool.optString("toolType");
@@ -536,23 +538,6 @@ private boolean useMealCardTool() {
             Log.record(TAG, "未找到加饭卡工具或数量不足");
             return false;
         }
-
-        String result = AntFarmRpcCall.useFarmTool(Status.ownerFarmId, mealCardToolId, mealCardToolType);
-        JSONObject resultJson = new JSONObject(result);
-        boolean success = resultJson.optBoolean("success", false);
-        if (success) {
-            Status.useMealCardTool();
-            Log.record(TAG, "成功使用加饭卡");
-            return true;
-        } else {
-            Log.record(TAG, "使用加饭卡失败: " + resultJson.optString("memo"));
-            return false;
-        }
-    } catch (Exception e) {
-        Log.printStackTrace(e);
-        return false;
-    }
-}
 
         // 调用使用道具接口
         String result = AntFarmRpcCall.useFarmTool(Status.getOwnerFarmId(), mealCardToolId, mealCardToolType);
@@ -572,8 +557,6 @@ private boolean useMealCardTool() {
         return false;
     }
 }
-
-
 
     private boolean exchangeBenefit(String spuId) {
         try {
