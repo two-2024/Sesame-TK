@@ -36,6 +36,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.ListModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
+import fansirsqi.xposed.sesame.model.modelFieldExt.StringListModelField;
 import fansirsqi.xposed.sesame.task.AnswerAI.AnswerAI;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
@@ -112,11 +113,10 @@ public class AntFarm extends ModelTask {
     private static final String ANSWERED_FLAG = "farmQuestion::answered"; // 今日是否已答题
     private static final String CACHED_FLAG = "farmQuestion::cache";     // 是否已缓存明日答案
 
-    // 加饭卡 | 使用开关
+    // 加饭卡
     private BooleanModelField autoUseFeedTool;
-
-    // 加饭卡 | 使用时间点（格式: HH:mm）
-    private ListModelField feedToolUseTime;
+    private StringListModelField feedToolUseTime;
+    private boolean feedToolTasksScheduled = false;
     
     /**
      * 小鸡睡觉时间
@@ -239,8 +239,8 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
-        modelFields.addField(autoUseFeedTool = new BooleanModelField("autoUseFeedTool","加饭卡 | 使用",false));
-        modelFields.addField(feedToolUseTime = new ListModelField("feedToolUseTime", "加饭卡 | 使用时间点(格式如06:00)", ListUtil.newArrayList("06:00", "12:00", "19:00")));
+        modelFields.addField(autoUseFeedTool = new BooleanModelField("autoUseFeedTool","加饭卡 | 自动使用",false));
+        modelFields.addField(feedToolUseTime = new StringListModelField("feedToolUseTime","加饭卡 | 使用时间点(支持06:30或0630,多个逗号)",ListUtil.newArrayList("0630","1200","1900")));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -347,6 +347,11 @@ public class AntFarm extends ModelTask {
 
             handleAutoFeedAnimal();
 
+            //加饭卡
+            if (!feedToolTasksScheduled) {
+    scheduleFeedToolTasks();
+    feedToolTasksScheduled = true;
+}
             // 到访小鸡送礼
             visitAnimal();
             // 送麦子
@@ -396,77 +401,89 @@ public class AntFarm extends ModelTask {
         }
     }
 
+    // --- time normalize ---
+private static String normalizeTimePoint(String raw) {
+    if (raw == null) return null;
+    String s = raw.trim();
+    if (s.isEmpty()) return null;
+    String digits = s.replaceAll("\\D", "");
+    if (digits.length() == 1)      digits = "0" + digits + "00";
+    else if (digits.length() == 2) digits = digits + "00";
+    else if (digits.length() == 3) digits = "0" + digits;
+    else if (digits.length() == 4) {/*ok*/}
+    else if (digits.length() == 6) {/*ok*/}
+    else return null;
+    return digits;
+}
+// --- 调度 ---
 private void scheduleFeedToolTasks() {
-    if (!autoUseFeedTool.getValue()) {
-        Log.runtime(TAG, "加饭卡自动使用未开启");
-        return;
-    }
+    if (!autoUseFeedTool.getValue()) return;
+    List<String> rawList = feedToolUseTime.getValue();
+    if (rawList == null || rawList.isEmpty()) return;
 
-    List<String> timeList = feedToolUseTime.getValue(); 
-    if (timeList == null || timeList.isEmpty()) return;
-
-    for (String timeStr : timeList) {
-        scheduleSingleFeedToolTask(timeStr);
-    }
-}
-
-private void scheduleSingleFeedToolTask(String timeStr) {
-    Calendar calendar = TimeUtil.getTodayCalendarByTimeStr(timeStr);
-    if (calendar == null) {
-        Log.record(TAG, "加饭卡时间格式错误：" + timeStr);
-        return;
-    }
-
-    // 如果时间已过，顺延到明天
-    if (System.currentTimeMillis() > calendar.getTimeInMillis()) {
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-    }
-
-    long triggerTime = calendar.getTimeInMillis();
-    String taskId = "FeedToolUse|" + timeStr;
-
-    if (!hasChildTask(taskId)) {
-        addChildTask(new ChildModelTask(taskId, "FTU", () -> {
-            if (Status.canUseFeedTool() && Status.isFeedBowlHasFood()) {
-                useFarmTool(ownerFarmId, ToolType.FEED);
-                Log.record(TAG, "自动使用加饭卡@" + timeStr);
-            } else {
-                Log.runtime(TAG, "加饭卡无法使用或无食物@" + timeStr);
-            }
-
-            // 执行完后重新调度明天
-            rescheduleFeedToolTask(timeStr);
-
-        }, triggerTime));
-
-        Log.record(TAG, "添加定时加饭卡任务[" + UserMap.getCurrentMaskName() + "]将在[" + TimeUtil.getCommonDate(triggerTime) + "]执行");
-    }
-}
-
-private void rescheduleFeedToolTask(String timeStr) {
-    removeChildTask("FeedToolUse|" + timeStr); // 清理旧任务
-    Calendar calendar = TimeUtil.getTodayCalendarByTimeStr(timeStr);
-    if (calendar == null) return;
-
-    calendar.add(Calendar.DAY_OF_MONTH, 1);
-    long nextTime = calendar.getTimeInMillis();
-    String taskId = "FeedToolUse|" + timeStr;
-
-    addChildTask(new ChildModelTask(taskId, "FTU", () -> {
-        if (Status.canUseFeedTool() && Status.isFeedBowlHasFood()) {
-            useFarmTool(ownerFarmId, ToolType.FEED);
-            Log.record(TAG, "自动使用加饭卡@" + timeStr);
-        } else {
-            Log.runtime(TAG, "加饭卡无法使用或无食物@" + timeStr);
+    long now = System.currentTimeMillis();
+    for (String raw : rawList) {
+        String tKey = normalizeTimePoint(raw);
+        if (tKey == null) {
+            Log.record(TAG, "加饭卡时间格式错误: " + raw);
+            continue;
         }
-
-        rescheduleFeedToolTask(timeStr); // 继续下一轮
-
-    }, nextTime));
-
-    Log.record(TAG, "续约定时加饭卡任务将在[" + TimeUtil.getCommonDate(nextTime) + "]执行");
+        Calendar cal = TimeUtil.getTodayCalendarByTimeStr(tKey);
+        if (cal == null) {
+            Log.record(TAG, "解析失败: " + raw + " -> " + tKey);
+            continue;
+        }
+        if (now > cal.getTimeInMillis()) {
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        long trigger = cal.getTimeInMillis();
+        String taskId = "FeedToolUse|" + tKey;
+        if (!hasChildTask(taskId)) {
+            addChildTask(new ChildModelTask(taskId,"FTU",()->{
+                tryUseFeedTool(ownerFarmId);
+                rescheduleFeedToolTask(tKey);
+            },trigger));
+            Log.record(TAG,"添加定时加饭卡任务["+raw+"]在["+TimeUtil.getCommonDate(trigger)+"]执行");
+        }
+    }
 }
 
+private void rescheduleFeedToolTask(String tKey) {
+    Calendar cal = TimeUtil.getTodayCalendarByTimeStr(tKey);
+    if (cal == null) return;
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    long trigger = cal.getTimeInMillis();
+    String taskId = "FeedToolUse|" + tKey;
+    addChildTask(new ChildModelTask(taskId,"FTU",()->{
+        tryUseFeedTool(ownerFarmId);
+        rescheduleFeedToolTask(tKey);
+    },trigger));
+    Log.record(TAG,"续约加饭卡任务["+tKey+"]在["+TimeUtil.getCommonDate(trigger)+"]执行");
+}
+
+// --- 真正执行 ---
+private void tryUseFeedTool(String farmId) {
+    if (!autoUseFeedTool.getValue()) return;
+    listFarmTool();      // 刷 farmTools
+    updateFeedToolMap(); // 构建 feedToolMap
+    if (!checkHasFeed(farmId)) {
+        Log.record(TAG,"饭盆无饲料，跳过加饭卡。");
+        return;
+    }
+    for (Map.Entry<String,Integer> e : feedToolMap.entrySet()) {
+        if (e.getValue() > 0) {
+            String id = e.getKey();
+            String r = AntFarmRpcCall.useFarmTool(farmId, id, "FEEDTOOL");
+            if (r != null && r.contains("SUCCESS")) {
+                Log.record(TAG,"自动使用加饭卡成功 -> "+id);
+            } else {
+                Log.record(TAG,"自动使用加饭卡失败 -> "+id);
+            }
+            break;
+        }
+    }
+}
+    
     /**
      * 召回小鸡
      */
