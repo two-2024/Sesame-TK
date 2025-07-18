@@ -88,6 +88,11 @@ public class AntFarm extends ModelTask {
     private double finalScore = 0d;
     private String familyGroupId;
     private FarmTool[] farmTools;
+     /**
+     * 加饭卡
+     */
+    private static final String ADD_FOOD_TOOL = "ADD_FOOD_TOOL";
+    private boolean hasUsedAddFoodTool = false;
 
     static {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -233,6 +238,8 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
+        // 新增：加饭卡使用开关
+        modelFields.addField(useMealCard = new BooleanModelField("useMealCard", "加饭卡 | 使用", false));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -934,7 +941,28 @@ public class AntFarm extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+        /**
+     * 加饭卡
+     */
+    private void tryUseAddFoodTool(String ownerFarmId, List<FarmTool> toolList) {
+    if (hasUsedAddFoodTool) return;
 
+    FarmTool addFoodTool = getFarmToolByType(toolList, ADD_FOOD_TOOL);
+    if (addFoodTool != null && "NORMAL".equals(addFoodTool.status) && addFoodTool.amount > 0) {
+        log("尝试使用加饭卡...");
+        boolean result = RpcUtil.useFarmTool(ownerFarmId, ADD_FOOD_TOOL);
+        if (result) {
+            log("已使用加饭卡");
+            hasUsedAddFoodTool = true;
+            Status.useAddFoodTool(); // 如果你有记录状态的类
+        } else {
+            log("使用加饭卡失败");
+        }
+    } else {
+        log("无可用加饭卡");
+    }
+}
+    
     private void receiveToolTaskReward() {
         try {
             String s = AntFarmRpcCall.listToolTaskDetails();
