@@ -7,21 +7,6 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- 主图 -->
-    <ImageView
-        android:id="@+id/main_image"
-        android:layout_width="320dp"
-        android:layout_height="wrap_content"
-        android:alpha="0.8"
-        android:contentDescription="@string/the_image_of_main"
-        android:onClick="onClick"
-        android:scaleType="centerInside"
-        android:visibility="invisible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@drawable/main"
-        tools:ignore="ImageContrastCheck,MissingConstraints,UsingOnClickInXml" />
-
     <!-- 标题栏，直接嵌入 -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/base_title"
