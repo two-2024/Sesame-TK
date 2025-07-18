@@ -36,7 +36,6 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.ListModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
-import fansirsqi.xposed.sesame.model.modelFieldExt.StringListModelField;
 import fansirsqi.xposed.sesame.task.AnswerAI.AnswerAI;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
@@ -117,8 +116,8 @@ public class AntFarm extends ModelTask {
     private BooleanModelField autoUseFeedTool;
 
     // 加饭卡 | 使用时间点（格式: HH:mm）
-    private StringListModelField feedToolUseTime;
-
+    private ListModelField feedToolUseTime;
+    
     /**
      * 小鸡睡觉时间
      */
@@ -241,7 +240,7 @@ public class AntFarm extends ModelTask {
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
         modelFields.addField(autoUseFeedTool = new BooleanModelField("autoUseFeedTool","加饭卡 | 使用",false));
-        modelFields.addField(feedToolUseTime = new StringListModelField("feedToolUseTime","加饭卡 | 使用时间点(格式如06:00)",Arrays.asList("06:00", "12:00", "19:00")));
+        modelFields.addField(feedToolUseTime = new ListModelField("feedToolUseTime", "加饭卡 | 使用时间点(格式如06:00)", ListUtil.newArrayList("06:00", "12:00", "19:00")));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -460,21 +459,6 @@ private void rescheduleFeedToolTask(String timeStr) {
         Log.record(TAG, "续约加饭卡任务[" + UserMap.getCurrentMaskName() + "]在[" + TimeUtil.getCommonDate(nextTime.getTimeInMillis()) + "]执行");
     }
 }
-
-
-private void rescheduleFeedToolTask(String timeStr) {
-    Calendar nextTime = TimeUtil.getTodayCalendarByTimeStr(timeStr);
-    if (nextTime != null) {
-        nextTime.add(Calendar.DAY_OF_MONTH, 1);
-        String taskId = "FeedToolUse|" + timeStr;
-        addChildTask(new ChildModelTask(taskId, "FTU", () -> {
-            tryUseFeedTool(ownerFarmId);
-            rescheduleFeedToolTask(timeStr); // 继续续约
-        }, nextTime.getTimeInMillis()));
-        Log.record(TAG, "续约加饭卡任务[" + UserMap.getCurrentMaskName() + "]在[" + TimeUtil.getCommonDate(nextTime.getTimeInMillis()) + "]执行");
-    }
-}
-
 
     /**
      * 召回小鸡
