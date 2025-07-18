@@ -1,14 +1,12 @@
 package fansirsqi.xposed.sesame.task.antFarm
 
-import fansirsqi.xposed.sesame.task.antFarm.AntFarm
-import fansirsqi.xposed.sesame.task.antFarm.AnimalInteractStatus
-import fansirsqi.xposed.sesame.task.antFarm.AnimalFeedStatus
 import fansirsqi.xposed.sesame.data.Status
 import fansirsqi.xposed.sesame.entity.AlipayUser
 import fansirsqi.xposed.sesame.extensions.JSONExtensions.toJSONArray
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField
-import fansirsqi.xposed.sesame.task.antFarm.AntFarm.AnimalFeedStatus
-import fansirsqi.xposed.sesame.task.antFarm.AntFarm.AnimalInteractStatus
+import fansirsqi.xposed.sesame.task.antFarm.AntFarm
+import fansirsqi.xposed.sesame.task.antFarm.AnimalInteractStatus
+import fansirsqi.xposed.sesame.task.antFarm.AnimalFeedStatus
 import fansirsqi.xposed.sesame.util.GlobalThreadPools
 import fansirsqi.xposed.sesame.util.Log
 import fansirsqi.xposed.sesame.util.RandomUtil
