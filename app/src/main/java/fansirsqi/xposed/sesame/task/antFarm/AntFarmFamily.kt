@@ -1,5 +1,8 @@
 package fansirsqi.xposed.sesame.task.antFarm
 
+import fansirsqi.xposed.sesame.task.antFarm.AntFarm
+import fansirsqi.xposed.sesame.task.antFarm.AnimalInteractStatus
+import fansirsqi.xposed.sesame.task.antFarm.AnimalFeedStatus
 import fansirsqi.xposed.sesame.data.Status
 import fansirsqi.xposed.sesame.entity.AlipayUser
 import fansirsqi.xposed.sesame.extensions.JSONExtensions.toJSONArray
