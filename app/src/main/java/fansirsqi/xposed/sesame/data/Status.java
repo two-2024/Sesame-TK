@@ -47,19 +47,6 @@ public class Status {
     private Set<String> dailyAnswerList = new HashSet<>();
     private Set<String> donationEggList = new HashSet<>();
     private int useAccelerateToolCount = 0;
-     /**
-     * 加饭卡
-     */
-    public static boolean canUseFeedTool() {
-    // 这里假设你有一个限制，比如每天只能喂食几次，可以加计数字段，或者简单返回true先测试
-    return true; // 简单实现，实际根据你的业务改写
-}
-
-    public static boolean isFeedBowlHasFood() {
-    // 这里假设你有某种状态判断碗是否有食物，暂时写个示例
-    return true; // 简单实现，实际根据你的业务改写
-}
-
     /**
      * 小鸡换装
      */
