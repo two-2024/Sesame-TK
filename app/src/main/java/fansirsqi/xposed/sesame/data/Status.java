@@ -47,15 +47,6 @@ public class Status {
     private Set<String> dailyAnswerList = new HashSet<>();
     private Set<String> donationEggList = new HashSet<>();
     private int useAccelerateToolCount = 0;
-    private int useMealCardToolCount = 0;//加饭卡
-    public static boolean canUseMealCardTool() {
-    return !getBoolean("usedMealCardToday");
-}
-
-public static void markMealCardToolUsed() {
-    putBoolean("usedMealCardToday", true);
-}
-
     /**
      * 小鸡换装
      */
@@ -263,20 +254,14 @@ public static void markMealCardToolUsed() {
         }
     }
 
+    public static boolean canUseAccelerateTool() {
+        return getINSTANCE().useAccelerateToolCount < 8;
+    }
+
     public static void useAccelerateTool() {
         getINSTANCE().useAccelerateToolCount += 1;
         save();
     }
-    
-    // 加饭卡照抄加速卡定义
-    public static boolean canUseMealCardTool() {
-    return getINSTANCE().useMealCardToolCount < 8;  
-}
-
-    public static void useMealCardTool() {
-    getINSTANCE().useMealCardToolCount += 1;
-    save();
-}
 
     public static boolean canDonationEgg(String uid) {
         return !getINSTANCE().donationEggList.contains(uid);
