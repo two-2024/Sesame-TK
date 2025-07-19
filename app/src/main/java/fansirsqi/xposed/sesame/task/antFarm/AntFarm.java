@@ -1582,7 +1582,7 @@ public class AntFarm extends ModelTask {
 
         Log.record("未找到可用的道具：" + toolType.name());
     } catch (Exception e) {
-        Log.record("useFarmTool 异常：" + Log.getStackTraceString(e));
+        Log.record("useFarmTool 异常：");
     }
     return false;
 }
