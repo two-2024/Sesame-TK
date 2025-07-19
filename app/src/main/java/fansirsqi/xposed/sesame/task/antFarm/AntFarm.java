@@ -681,10 +681,17 @@ public class AntFarm extends ModelTask {
         }
         // 2 喂鸡成功后使用一次加饭卡
         if (useAccelerateTool.getValue() && needReload) {
-            if (useFarmTool(ownerFarmId, ToolType.BIG_EATER_TOOL)) {
-                Log.record("已使用1张🍚加饭卡");
-                GlobalThreadPools.sleep(1000);
-            }
+        Log.record("准备使用🍚加饭卡，useAccelerateTool=" + useAccelerateTool.getValue() + "，needReload=" + needReload);
+
+       boolean result = useFarmTool(ownerFarmId, ToolType.BIG_EATER_TOOL);
+       Log.record("useFarmTool 返回值（BIG_EATER_TOOL）：" + result);
+
+        if (result) {
+        Log.record("✅ 已使用1张🍚加饭卡（BIG_EATER_TOOL）");
+        GlobalThreadPools.sleep(1000);
+        } else {
+        Log.record("⚠️ 使用加饭卡失败，可能未找到卡片或接口失败");
+        }
         }
 
         // 3. 判断是否需要使用加速道具
