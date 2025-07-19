@@ -81,33 +81,16 @@ jobs:
             fi
           done
 
-      - name: 更新安装包 - Compatible
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-compatible
-          path: ${{ steps.extract_apks.outputs.signed_compatible }}
-
-      - name: 更新安装包 - Normal
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-normal
-          path: ${{ steps.extract_apks.outputs.signed_normal }}
-
-      - name: 提取文件名
-        id: extract_info
+      - name: 生成日期时间版本号（带 v 前缀）
+        id: generate_version
         run: |
-          normal_file=$(basename "${{ steps.extract_apks.outputs.signed_normal }}")
-          compatible_file=$(basename "${{ steps.extract_apks.outputs.signed_compatible }}")
-          # 提取版本号（以"Normal-"或"Compatible-"之后的部分为起点，以"-signed"之前的内容为终点）
-          version=$(echo "$normal_file" | sed -E 's/.*-(Normal|Compatible)-(.*)-signed\.apk/\2/')
-          echo "normal_file=$normal_file" >> $GITHUB_OUTPUT
-          echo "compatible_file=$compatible_file" >> $GITHUB_OUTPUT
+          version=v$(date "+%Y-%m-%d_%H-%M-%S")
           echo "version=$version" >> $GITHUB_OUTPUT
-          
+
       - name: 生成sha256校验值
         run: |
-          sha256sum ${{ steps.extract_apks.outputs.signed_normal }} > CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-          sha256sum ${{ steps.extract_apks.outputs.signed_compatible }} > CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          sha256sum ${{ steps.extract_apks.outputs.signed_normal }} > CHECKSUMS-Sesame-Normal-${{ steps.generate_version.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          sha256sum ${{ steps.extract_apks.outputs.signed_compatible }} > CHECKSUMS-Sesame-Compatible-${{ steps.generate_version.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
 
       - name: 获取提交详细信息
         id: commit_details
@@ -143,11 +126,11 @@ jobs:
           to: ${{ secrets.TG_CHAT_ID }}
           token: ${{ secrets.TG_BOT_TOKEN }}
           message: |
-            📦 *普通新版本 ${{ steps.extract_info.outputs.version }} Build!*
+            📦 *普通新版本 ${{ steps.generate_version.outputs.version }} Build!*
 
             - Files: 
-              - Normal: `${{ steps.extract_info.outputs.normal_file }}`
-              - Compatible: `${{ steps.extract_info.outputs.compatible_file }}`
+              - Normal: `${{ steps.extract_apks.outputs.signed_normal }}`
+              - Compatible: `${{ steps.extract_apks.outputs.signed_compatible }}`
             - Branch: `${{ github.ref_name }}`
             - Triggered by: `${{ github.actor }}`
 
@@ -175,7 +158,7 @@ jobs:
       - name: 利用版本号创建标签
         if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
         run: |
-          VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
+          VERSION_TAG="${{ steps.generate_version.outputs.version }}"
           echo "Creating tag: $VERSION_TAG"
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"
@@ -183,13 +166,13 @@ jobs:
       - name: 将资源整合上传到你的仓库发布
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称，默认标签名
+          name: ${{ github.event.release.tag_name || steps.generate_version.outputs.version }}
           files: |
             ${{ steps.extract_apks.outputs.signed_compatible }}
             ${{ steps.extract_apks.outputs.signed_normal }}
-            CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-            CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-          tag_name: ${{ steps.extract_info.outputs.version }}
+            CHECKSUMS-Sesame-Normal-${{ steps.generate_version.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Compatible-${{ steps.generate_version.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          tag_name: ${{ steps.generate_version.outputs.version }}
           draft: false
           append_body: true
           generate_release_notes: true
