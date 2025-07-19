@@ -72,9 +72,6 @@ public class AntFarm extends ModelTask {
     private int foodStockLimit;
     private String rewardProductNum;
     private RewardFriend[] rewardList;
-    
-     /// 是否使用加饭卡
-    private BooleanModelField useMealCardTool;
     /**
      * 慈善评分
      */
@@ -213,7 +210,7 @@ public class AntFarm extends ModelTask {
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
-        modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2330"));
+        modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2001"));
         modelFields.addField(sleepMinutes = new IntegerModelField("sleepMinutes", "小鸡睡觉时长(分钟)", 10 * 59, 1, 10 * 60));
         modelFields.addField(recallAnimalType = new ChoiceModelField("recallAnimalType", "召回小鸡", RecallAnimalType.ALWAYS, RecallAnimalType.nickNames));
         modelFields.addField(rewardFriend = new BooleanModelField("rewardFriend", "打赏好友", false));
@@ -236,7 +233,6 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
-        modelFields.addField(useMealCardTool = new BooleanModelField("useMealCardTool", "使用加饭卡", false));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -326,12 +322,6 @@ public class AntFarm extends ModelTask {
             if (useNewEggCard.getValue()) {
                 useFarmTool(ownerFarmId, ToolType.NEWEGGTOOL);
                 syncAnimalStatus(ownerFarmId);
-            }
-            // 加入使用加饭卡的逻辑
-            if (useMealCardTool.getValue()) {
-             if (useMealCardTool()) {
-              syncAnimalStatus(ownerFarmId);
-              }
             }
             if (harvestProduce.getValue() && benevolenceScore >= 1) {
                 Log.record(TAG, "有可收取的爱心鸡蛋");
@@ -497,29 +487,6 @@ public class AntFarm extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
-
-/**
- * 使用加饭卡
- *
- * @return true: 使用成功，false: 使用失败
- */
-private Boolean useMealCardTool() {
-    if (!Status.canUseMealCardTool()) {
-        return false;
-    }
-    // 饿的时候才使用
-    if (!"HUNGRY".equals(ownerAnimal.animalFeedStatus)) {
-        return false;
-    }
-
-    boolean result = useFarmTool(FarmToolType.BIG_EATER_TOOL);
-    if (result) {
-        Log.record(TAG, "使用了加饭卡");
-        Status.markMealCardToolUsed();
-    }
-    return result;
-}
-
 
     private boolean exchangeBenefit(String spuId) {
         try {
@@ -710,27 +677,21 @@ private Boolean useMealCardTool() {
                 }
             }
         }
-        // 2. 判断是否需要使用加饭卡道具
-        if (useMealCardTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
-    if (AntFarmToolUtil.useMealCardTool()) {  // 调用工具方法，避免混淆
-        needReload = true;
-    }
-}
 
-        // 3. 判断是否需要使用加速道具
+        // 2. 判断是否需要使用加速道具
         if (useAccelerateTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
             if (useAccelerateTool()) {
                 needReload = true;
             }
         }
 
-        // 4. 如果有操作导致状态变化，则刷新庄园信息
+        // 3. 如果有操作导致状态变化，则刷新庄园信息
         if (needReload) {
             enterFarm();
             syncAnimalStatus(ownerFarmId);
         }
 
-        // 5. 计算并安排下一次自动喂食任务
+        // 4. 计算并安排下一次自动喂食任务
         try {
             Long startEatTime = ownerAnimal.startEatTime;
             double allFoodHaveEatten = 0d;
@@ -757,7 +718,7 @@ private Boolean useMealCardTool() {
             Log.printStackTrace(e);
         }
 
-        // 6. 其他功能（换装、领取饲料）
+        // 5. 其他功能（换装、领取饲料）
         // 小鸡换装
         if (listOrnaments.getValue() && Status.canOrnamentToday()) {
             listOrnaments();
@@ -3145,7 +3106,7 @@ private Boolean useMealCardTool() {
             list.add(new AntFarmFamilyOption("familySign", "每日签到"));
             list.add(new AntFarmFamilyOption("eatTogetherConfig", "请吃美食"));
             list.add(new AntFarmFamilyOption("feedFamilyAnimal", "帮喂小鸡"));
-            list.add(new AntFarmFamilyOption("deliverMsgSend", "道早安"));
+//            list.add(new AntFarmFamilyOption("deliverMsgSend", "道早安"));
             list.add(new AntFarmFamilyOption("familyClaimReward", "领取奖励"));
             list.add(new AntFarmFamilyOption("inviteFriendVisitFamily", "好友分享"));
             list.add(new AntFarmFamilyOption("assignRights", "使用顶梁柱特权"));
