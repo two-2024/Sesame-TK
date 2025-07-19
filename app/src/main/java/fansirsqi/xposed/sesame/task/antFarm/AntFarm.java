@@ -177,6 +177,7 @@ public class AntFarm extends ModelTask {
      */
     private BooleanModelField receiveFarmTaskAward;
     private BooleanModelField useAccelerateTool;
+    private BooleanModelField useBigEaterTool; // ✅ 新增加饭卡
     private BooleanModelField useAccelerateToolContinue;
     private BooleanModelField useAccelerateToolWhenMaxEmotion;
     /**
@@ -233,6 +234,7 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
+        modelFields.addField(useBigEaterTool = new BooleanModelField("useBigEaterTool", "加饭卡 | 使用", true));
         modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
@@ -677,21 +679,28 @@ public class AntFarm extends ModelTask {
                 }
             }
         }
+        // 2 喂鸡成功后使用一次加饭卡
+        if (useAccelerateTool.getValue() && needReload) {
+            if (useFarmTool(ownerFarmId, ToolType.BIG_EATER_TOOL)) {
+                Log.record("已使用1张🍚加饭卡");
+                GlobalThreadPools.sleep(1000);
+            }
+        }
 
-        // 2. 判断是否需要使用加速道具
+        // 3. 判断是否需要使用加速道具
         if (useAccelerateTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
             if (useAccelerateTool()) {
                 needReload = true;
             }
         }
 
-        // 3. 如果有操作导致状态变化，则刷新庄园信息
+        // 4. 如果有操作导致状态变化，则刷新庄园信息
         if (needReload) {
             enterFarm();
             syncAnimalStatus(ownerFarmId);
         }
 
-        // 4. 计算并安排下一次自动喂食任务
+        // 5. 计算并安排下一次自动喂食任务
         try {
             Long startEatTime = ownerAnimal.startEatTime;
             double allFoodHaveEatten = 0d;
@@ -718,7 +727,7 @@ public class AntFarm extends ModelTask {
             Log.printStackTrace(e);
         }
 
-        // 5. 其他功能（换装、领取饲料）
+        // 6. 其他功能（换装、领取饲料）
         // 小鸡换装
         if (listOrnaments.getValue() && Status.canOrnamentToday()) {
             listOrnaments();
@@ -2608,7 +2617,7 @@ public class AntFarm extends ModelTask {
     }
 
     public enum ToolType {
-        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL;
+        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL, BIG_EATER_TOOL;
 
         public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡"};
 
