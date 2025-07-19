@@ -1541,45 +1541,52 @@ public class AntFarm extends ModelTask {
         return isUseAccelerateTool;
     }
 
-    private Boolean useFarmTool(String targetFarmId, ToolType toolType) {
-        try {
-            String s = AntFarmRpcCall.listFarmTool();
-            JSONObject jo = new JSONObject(s);
-            String memo = jo.getString("memo");
-            if (ResChecker.checkRes(TAG, jo)) {
-                JSONArray jaToolList = jo.getJSONArray("toolList");
-                for (int i = 0; i < jaToolList.length(); i++) {
-                    jo = jaToolList.getJSONObject(i);
-                    if (toolType.name().equals(jo.getString("toolType"))) {
-                        int toolCount = jo.getInt("toolCount");
-                        if (toolCount > 0) {
-                            String toolId = "";
-                            if (jo.has("toolId"))
-                                toolId = jo.getString("toolId");
-                            s = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, toolType.name());
-                            jo = new JSONObject(s);
-                            memo = jo.getString("memo");
-                            if (ResChecker.checkRes(TAG, jo)) {
-                                Log.farm("使用道具🎭[" + toolType.nickName() + "]#剩余" + (toolCount - 1) + "张");
-                                return true;
-                            } else {
-                                Log.record(memo);
-                            }
-                            Log.runtime(s);
-                        }
-                        break;
-                    }
-                }
-            } else {
-                Log.record(memo);
-                Log.runtime(s);
-            }
-        } catch (Throwable t) {
-            Log.runtime(TAG, "useFarmTool err:");
-            Log.printStackTrace(TAG, t);
+    public boolean useFarmTool(String targetFarmId, ToolType toolType) {
+    Log.record("调用 listFarmTool 开始");
+    String response = AntFarmRpcCall.listFarmTool();
+    Log.record("listFarmTool 响应：" + response);
+
+    try {
+        JSONObject jo = new JSONObject(response);
+        if (!ResChecker.checkRes(TAG, jo)) {
+            Log.record("❌ listFarmTool 响应检查失败");
+            return false;
         }
-        return false;
+
+        JSONArray tools = jo.getJSONArray("toolList");
+        Log.record("解析到 toolList 数量：" + tools.length());
+
+        for (int i = 0; i < tools.length(); i++) {
+            JSONObject tool = tools.getJSONObject(i);
+            String type = tool.optString("toolType", "");
+            int count = tool.optInt("toolCount", 0);
+            String toolId = tool.optString("toolId", "");
+
+            Log.record("发现道具：type=" + type + ", count=" + count + ", toolId=" + toolId);
+
+            if (toolType.name().equals(type) && count > 0) {
+                Log.record("尝试使用道具：" + type + "，调用 useFarmTool");
+                String useResult = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, type);
+                Log.record("useFarmTool 响应：" + useResult);
+
+                JSONObject resultJo = new JSONObject(useResult);
+                if (ResChecker.checkRes(TAG, resultJo)) {
+                    Log.record("✅ 成功使用道具：" + type + "，剩余：" + (count - 1));
+                    return true;
+                } else {
+                    Log.record("❌ 使用道具失败，响应校验未通过");
+                }
+                break; // 找到一个就退出循环
+            }
+        }
+
+        Log.record("未找到可用的道具：" + toolType.name());
+    } catch (Exception e) {
+        Log.record("useFarmTool 异常：" + Log.getStackTraceString(e));
     }
+    return false;
+}
+
 
     private void feedFriend() {
         try {
