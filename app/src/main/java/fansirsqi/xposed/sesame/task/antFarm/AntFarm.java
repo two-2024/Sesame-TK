@@ -59,6 +59,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+public enum ToolType {
+    ACCELERATETOOL,
+    BIG_EATER_TOOL,
+    NEWEGGTOOL,
+    // 其他工具类型...
+}
+
 public class AntFarm extends ModelTask {
     private static final String TAG = AntFarm.class.getSimpleName();
     private String ownerFarmId;
@@ -1543,34 +1550,46 @@ if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAni
         return isUseAccelerateTool;
     }
 
-    private Boolean useFarmTool(String targetFarmId, String toolTypeName) {
+/**
+ * 推荐调用方式（使用枚举 ToolType）
+ */
+public static boolean useFarmTool(String targetFarmId, ToolType toolType) {
+    return useFarmTool(targetFarmId, toolType.name());
+}
+
+/**
+ * 内部统一实现：根据 toolType 查找 toolId 并调用 RPC，保留原始日志风格
+ */
+private static boolean useFarmTool(String targetFarmId, String toolTypeName) {
     try {
         String s = AntFarmRpcCall.listFarmTool();
         JSONObject jo = new JSONObject(s);
-        String memo = jo.getString("memo");
+        String memo = jo.optString("memo", "");
+
         if (ResChecker.checkRes(TAG, jo)) {
-            JSONArray jaToolList = jo.getJSONArray("toolList");
+            JSONArray jaToolList = jo.optJSONArray("toolList");
+            if (jaToolList == null) return false;
+
             for (int i = 0; i < jaToolList.length(); i++) {
                 jo = jaToolList.getJSONObject(i);
-                if (toolTypeName.equals(jo.getString("toolType"))) {
-                    int toolCount = jo.getInt("toolCount");
-                    if (toolCount > 0) {
-                        String toolId = "";
-                        if (jo.has("toolId"))
-                            toolId = jo.getString("toolId");
-                        s = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, toolTypeName);
-                        jo = new JSONObject(s);
-                        memo = jo.getString("memo");
-                        if (ResChecker.checkRes(TAG, jo)) {
-                            Log.farm("使用道具🎭[" + toolTypeName + "]#剩余" + (toolCount - 1) + "张");
-                            return true;
-                        } else {
-                            Log.record(memo);
-                        }
-                        Log.runtime(s);
-                    }
-                    break;
+                if (!toolTypeName.equals(jo.optString("toolType"))) continue;
+
+                int toolCount = jo.optInt("toolCount", 0);
+                if (toolCount <= 0) break;
+
+                String toolId = jo.optString("toolId", "");
+                s = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, toolTypeName);
+
+                jo = new JSONObject(s);
+                memo = jo.optString("memo", "");
+                if (ResChecker.checkRes(TAG, jo)) {
+                    Log.farm("使用道具🎭[" + toolTypeName + "]#剩余" + (toolCount - 1) + "张");
+                    return true;
+                } else {
+                    Log.record(memo);
                 }
+                Log.runtime(s);
+                break; // 不管成功与否只尝试一次
             }
         } else {
             Log.record(memo);
@@ -1582,6 +1601,7 @@ if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAni
     }
     return false;
 }
+
 
     private void feedFriend() {
         try {
