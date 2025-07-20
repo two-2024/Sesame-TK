@@ -15,9 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 清理构建缓存
-        run: ./gradlew clean
-  
       - name: 将时区设为亚洲/上海
         run: |
           sudo timedatectl set-timezone Asia/Shanghai
@@ -27,6 +24,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          
+      - name: 清理构建缓存
+        run: ./gradlew clean    
 
       - name: 设置 JDK
         uses: actions/setup-java@v4
