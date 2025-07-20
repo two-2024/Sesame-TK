@@ -30,14 +30,7 @@ public class AntForestRpcCall {
             VERSION = "20230501";
         }
     }
-    //加饭卡
-    public static String useFarmTool(String targetFarmId, String toolId, String toolType) {
-    String args1 = "[{\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"targetFarmId\":\""
-            + targetFarmId + "\",\"toolId\":\"" + toolId + "\",\"toolType\":\"" + toolType + "\",\"version\":\""
-            + VERSION + "\"}]";
-    return RequestManager.requestString("com.alipay.antfarm.useFarmTool", args1);
-}
-
+   
     private static String getUniqueId() {
         return String.valueOf(System.currentTimeMillis()) + RandomUtil.nextLong();
     }
