@@ -25,7 +25,6 @@ import fansirsqi.xposed.sesame.entity.AlipayUser;
 import fansirsqi.xposed.sesame.entity.MapperEntity;
 import fansirsqi.xposed.sesame.entity.OtherEntityProvider;
 import fansirsqi.xposed.sesame.entity.ParadiseCoinBenefit;
-import fansirsqi.xposed.sesame.entity.ToolType;
 import fansirsqi.xposed.sesame.hook.rpc.intervallimit.RpcIntervalLimit;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.ModelFields;
@@ -1544,45 +1543,45 @@ if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAni
         return isUseAccelerateTool;
     }
 
-    private Boolean useFarmTool(String targetFarmId, ToolType toolType) {
-        try {
-            String s = AntFarmRpcCall.listFarmTool();
-            JSONObject jo = new JSONObject(s);
-            String memo = jo.getString("memo");
-            if (ResChecker.checkRes(TAG, jo)) {
-                JSONArray jaToolList = jo.getJSONArray("toolList");
-                for (int i = 0; i < jaToolList.length(); i++) {
-                    jo = jaToolList.getJSONObject(i);
-                    if (toolType.name().equals(jo.getString("toolType"))) {
-                        int toolCount = jo.getInt("toolCount");
-                        if (toolCount > 0) {
-                            String toolId = "";
-                            if (jo.has("toolId"))
-                                toolId = jo.getString("toolId");
-                            s = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, toolType.name());
-                            jo = new JSONObject(s);
-                            memo = jo.getString("memo");
-                            if (ResChecker.checkRes(TAG, jo)) {
-                                Log.farm("使用道具🎭[" + toolType.nickName() + "]#剩余" + (toolCount - 1) + "张");
-                                return true;
-                            } else {
-                                Log.record(memo);
-                            }
-                            Log.runtime(s);
+    private Boolean useFarmTool(String targetFarmId, String toolTypeName) {
+    try {
+        String s = AntFarmRpcCall.listFarmTool();
+        JSONObject jo = new JSONObject(s);
+        String memo = jo.getString("memo");
+        if (ResChecker.checkRes(TAG, jo)) {
+            JSONArray jaToolList = jo.getJSONArray("toolList");
+            for (int i = 0; i < jaToolList.length(); i++) {
+                jo = jaToolList.getJSONObject(i);
+                if (toolTypeName.equals(jo.getString("toolType"))) {
+                    int toolCount = jo.getInt("toolCount");
+                    if (toolCount > 0) {
+                        String toolId = "";
+                        if (jo.has("toolId"))
+                            toolId = jo.getString("toolId");
+                        s = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, toolTypeName);
+                        jo = new JSONObject(s);
+                        memo = jo.getString("memo");
+                        if (ResChecker.checkRes(TAG, jo)) {
+                            Log.farm("使用道具🎭[" + toolTypeName + "]#剩余" + (toolCount - 1) + "张");
+                            return true;
+                        } else {
+                            Log.record(memo);
                         }
-                        break;
+                        Log.runtime(s);
                     }
+                    break;
                 }
-            } else {
-                Log.record(memo);
-                Log.runtime(s);
             }
-        } catch (Throwable t) {
-            Log.runtime(TAG, "useFarmTool err:");
-            Log.printStackTrace(TAG, t);
+        } else {
+            Log.record(memo);
+            Log.runtime(s);
         }
-        return false;
+    } catch (Throwable t) {
+        Log.runtime(TAG, "useFarmTool err:");
+        Log.printStackTrace(TAG, t);
     }
+    return false;
+}
 
     private void feedFriend() {
         try {
