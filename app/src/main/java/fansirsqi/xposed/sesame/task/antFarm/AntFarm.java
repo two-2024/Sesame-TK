@@ -22,8 +22,6 @@ import java.util.function.Function;
 
 import fansirsqi.xposed.sesame.data.DataCache;
 import fansirsqi.xposed.sesame.entity.AlipayUser;
-//加饭卡⬇️
-import fansirsqi.xposed.sesame.entity.ToolType;
 import fansirsqi.xposed.sesame.entity.MapperEntity;
 import fansirsqi.xposed.sesame.entity.OtherEntityProvider;
 import fansirsqi.xposed.sesame.entity.ParadiseCoinBenefit;
@@ -684,11 +682,11 @@ public class AntFarm extends ModelTask {
         
         // 2. 使用加饭卡（仅当正在吃饭且开启配置）
 if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAnimal.animalFeedStatus)) {
-    Log.record("🍚 小鸡正在吃饭，尝试使用加饭卡（BIG_EATER_TOOL）...");
+    Log.record("🍚 小鸡正在吃饭，尝试使用加饭卡...");
     boolean result = useFarmTool(ownerFarmId, ToolType.BIG_EATER_TOOL);
     Log.record("useFarmTool 返回值（BIG_EATER_TOOL）：" + result);
     if (result) {
-        Log.record("✅ 已使用1张🍚加饭卡（BIG_EATER_TOOL）");
+        Log.record("✅ 已使用1张🍚加饭卡");
         GlobalThreadPools.sleep(1000);
         needReload = true;
     } else {
