@@ -211,7 +211,7 @@ public class AntFarm extends ModelTask {
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
-        modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2330"));
+        modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2330"));//年轻人不要睡太早
         modelFields.addField(sleepMinutes = new IntegerModelField("sleepMinutes", "小鸡睡觉时长(分钟)", 10 * 59, 1, 10 * 60));
         modelFields.addField(recallAnimalType = new ChoiceModelField("recallAnimalType", "召回小鸡", RecallAnimalType.ALWAYS, RecallAnimalType.nickNames));
         modelFields.addField(rewardFriend = new BooleanModelField("rewardFriend", "打赏好友", false));
@@ -679,22 +679,20 @@ public class AntFarm extends ModelTask {
                 }
             }
         }
-        // Step 2. 使用加饭卡（仅当正在吃饭且开启配置）
-if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAnimal.animalFeedStatus)) {
-    Log.record("🍚 小鸡正在吃饭，尝试使用加饭卡...");
-    boolean result = useFarmTool(ownerFarmId, ToolType.BIG_EATER_TOOL);
-    Log.record("useFarmTool 返回值（BIG_EATER_TOOL）：" + result);
-    if (result) {
-        Log.record("✅ 已使用1张🍚加饭卡");
-        GlobalThreadPools.sleep(1000);
-        needReload = true;
-    } else {
-        Log.record("⚠️ 使用加饭卡失败，可能未找到卡片或接口失败");
-    }
-}
-
-
-
+        
+        // 2. 使用加饭卡（仅当正在吃饭且开启配置）
+       if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAnimal.animalFeedStatus)) {
+         Log.record("🍚 小鸡正在吃饭，尝试使用加饭卡...");
+         boolean result = useFarmTool(ownerFarmId, ToolType.BIG_EATER_TOOL);
+         Log.record("useFarmTool 返回值（BIG_EATER_TOOL）：" + result);
+       if (result) {
+         Log.record("✅ 已使用1张🍚加饭卡");
+         GlobalThreadPools.sleep(1000);
+         needReload = true;
+         } else {
+         Log.record("⚠️ 使用加饭卡失败，可能未找到卡片或接口失败");
+        }
+        }
 
         // 3. 判断是否需要使用加速道具
         if (useAccelerateTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
@@ -1543,52 +1541,45 @@ if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAni
         return isUseAccelerateTool;
     }
 
-    public boolean useFarmTool(String targetFarmId, ToolType toolType) {
-    Log.record("调用 listFarmTool 开始");
-    String response = AntFarmRpcCall.listFarmTool();
-    Log.record("listFarmTool 响应：" + response);
-
-    try {
-        JSONObject jo = new JSONObject(response);
-        if (!ResChecker.checkRes(TAG, jo)) {
-            Log.record("❌ listFarmTool 响应检查失败");
-            return false;
-        }
-
-        JSONArray tools = jo.getJSONArray("toolList");
-        Log.record("解析到 toolList 数量：" + tools.length());
-
-        for (int i = 0; i < tools.length(); i++) {
-            JSONObject tool = tools.getJSONObject(i);
-            String type = tool.optString("toolType", "");
-            int count = tool.optInt("toolCount", 0);
-            String toolId = tool.optString("toolId", "");
-
-            Log.record("发现道具：type=" + type + ", count=" + count + ", toolId=" + toolId);
-
-            if (toolType.name().equals(type) && count > 0) {
-                Log.record("尝试使用道具：" + type + "，调用 useFarmTool");
-                String useResult = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, type);
-                Log.record("useFarmTool 响应：" + useResult);
-
-                JSONObject resultJo = new JSONObject(useResult);
-                if (ResChecker.checkRes(TAG, resultJo)) {
-                    Log.record("✅ 成功使用道具：" + type + "，剩余：" + (count - 1));
-                    return true;
-                } else {
-                    Log.record("❌ 使用道具失败，响应校验未通过");
+    private Boolean useFarmTool(String targetFarmId, ToolType toolType) {
+        try {
+            String s = AntFarmRpcCall.listFarmTool();
+            JSONObject jo = new JSONObject(s);
+            String memo = jo.getString("memo");
+            if (ResChecker.checkRes(TAG, jo)) {
+                JSONArray jaToolList = jo.getJSONArray("toolList");
+                for (int i = 0; i < jaToolList.length(); i++) {
+                    jo = jaToolList.getJSONObject(i);
+                    if (toolType.name().equals(jo.getString("toolType"))) {
+                        int toolCount = jo.getInt("toolCount");
+                        if (toolCount > 0) {
+                            String toolId = "";
+                            if (jo.has("toolId"))
+                                toolId = jo.getString("toolId");
+                            s = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, toolType.name());
+                            jo = new JSONObject(s);
+                            memo = jo.getString("memo");
+                            if (ResChecker.checkRes(TAG, jo)) {
+                                Log.farm("使用道具🎭[" + toolType.nickName() + "]#剩余" + (toolCount - 1) + "张");
+                                return true;
+                            } else {
+                                Log.record(memo);
+                            }
+                            Log.runtime(s);
+                        }
+                        break;
+                    }
                 }
-                break; // 找到一个就退出循环
+            } else {
+                Log.record(memo);
+                Log.runtime(s);
             }
+        } catch (Throwable t) {
+            Log.runtime(TAG, "useFarmTool err:");
+            Log.printStackTrace(TAG, t);
         }
-
-        Log.record("未找到可用的道具：" + toolType.name());
-    } catch (Exception e) {
-        Log.record("useFarmTool 异常：");
+        return false;
     }
-    return false;
-}
-
 
     private void feedFriend() {
         try {
@@ -2633,7 +2624,7 @@ if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAni
     }
 
     public enum ToolType {
-        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL, BIG_EATER_TOOL;
+        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL;
 
         public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡"};
 
@@ -3131,7 +3122,7 @@ if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAni
             list.add(new AntFarmFamilyOption("familySign", "每日签到"));
             list.add(new AntFarmFamilyOption("eatTogetherConfig", "请吃美食"));
             list.add(new AntFarmFamilyOption("feedFamilyAnimal", "帮喂小鸡"));
-//            list.add(new AntFarmFamilyOption("deliverMsgSend", "道早安"));
+            list.add(new AntFarmFamilyOption("deliverMsgSend", "道早安"));
             list.add(new AntFarmFamilyOption("familyClaimReward", "领取奖励"));
             list.add(new AntFarmFamilyOption("inviteFriendVisitFamily", "好友分享"));
             list.add(new AntFarmFamilyOption("assignRights", "使用顶梁柱特权"));
