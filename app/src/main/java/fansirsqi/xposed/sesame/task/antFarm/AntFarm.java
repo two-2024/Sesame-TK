@@ -59,13 +59,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public enum ToolType {
-    ACCELERATETOOL,
-    BIG_EATER_TOOL,
-    NEWEGGTOOL,
-    // 其他工具类型...
-}
-
 public class AntFarm extends ModelTask {
     private static final String TAG = AntFarm.class.getSimpleName();
     private String ownerFarmId;
@@ -2646,9 +2639,9 @@ private static boolean useFarmTool(String targetFarmId, String toolTypeName) {
     }
 
     public enum ToolType {
-        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL;
+        BIG_EATER_TOOL,STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL;
 
-        public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡"};
+        public static final CharSequence[] nickNames = {"加饭卡","蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡"};
 
         public CharSequence nickName() {
             return nickNames[ordinal()];
