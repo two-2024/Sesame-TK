@@ -1,5 +1,7 @@
 package fansirsqi.xposed.sesame.entity
 
-enum class ToolType {
-    BIG_EATER_TOOL // ✅ 在此添加这一行
+enum class ToolType(val nickName: String) {
+    BIG_EATER_TOOL("加饭卡");
+
+    fun nickName() = nickName
 }
