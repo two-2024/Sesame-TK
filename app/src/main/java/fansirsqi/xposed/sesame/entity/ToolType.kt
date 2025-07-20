@@ -1,5 +1,5 @@
-package fansirsqi.xposed.sesame.entity
+package fansirsqi.xposed.sesame.entity;
 
-enum class ToolType {
-    BIG_EATER_TOOL // ✅ 在此添加这一行
+public enum ToolType {
+    BIG_EATER_TOOL;
 }
