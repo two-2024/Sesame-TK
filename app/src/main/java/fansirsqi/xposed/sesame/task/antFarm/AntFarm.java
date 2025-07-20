@@ -25,6 +25,7 @@ import fansirsqi.xposed.sesame.entity.AlipayUser;
 import fansirsqi.xposed.sesame.entity.MapperEntity;
 import fansirsqi.xposed.sesame.entity.OtherEntityProvider;
 import fansirsqi.xposed.sesame.entity.ParadiseCoinBenefit;
+import fansirsqi.xposed.sesame.entity.ToolType;
 import fansirsqi.xposed.sesame.hook.rpc.intervallimit.RpcIntervalLimit;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.ModelFields;
