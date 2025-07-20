@@ -683,9 +683,9 @@ public class AntFarm extends ModelTask {
        // 2. 使用加饭卡（仅当正在吃饭且开启配置）
 if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAnimal.animalFeedStatus)) {
     Log.record("🍚 小鸡正在吃饭，尝试使用加饭卡...");
-    // 直接用字符串常量代替枚举
-    boolean result = useFarmTool(ownerFarmId, "BIG_EATER_TOOL");
-    Log.record("useFarmTool 返回值（BIG_EATER_TOOL）：" + result);
+    // 用内部枚举代替字符串
+    boolean result = useFarmTool(ownerFarmId, AntFarm.ToolType.BIG_EATER_TOOL);
+    Log.record("useFarmTool 返回值（" + AntFarm.ToolType.BIG_EATER_TOOL.name() + "）：" + result);
     if (result) {
         Log.record("✅ 已使用1张🍚加饭卡");
         GlobalThreadPools.sleep(1000);
@@ -694,6 +694,7 @@ if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAni
         Log.record("⚠️ 使用加饭卡失败，可能未找到卡片或接口失败");
     }
 }
+
 
 
         // 3. 判断是否需要使用加速道具
@@ -1543,57 +1544,45 @@ if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAni
         return isUseAccelerateTool;
     }
 
-/**
- * 推荐调用方式（使用枚举 ToolType）
- */
-public static boolean useFarmTool(String targetFarmId, ToolType toolType) {
-    return useFarmTool(targetFarmId, toolType.name());
-}
-
-/**
- * 内部统一实现：根据 toolType 查找 toolId 并调用 RPC，保留原始日志风格
- */
-private static boolean useFarmTool(String targetFarmId, String toolTypeName) {
-    try {
-        String s = AntFarmRpcCall.listFarmTool();
-        JSONObject jo = new JSONObject(s);
-        String memo = jo.optString("memo", "");
-
-        if (ResChecker.checkRes(TAG, jo)) {
-            JSONArray jaToolList = jo.optJSONArray("toolList");
-            if (jaToolList == null) return false;
-
-            for (int i = 0; i < jaToolList.length(); i++) {
-                jo = jaToolList.getJSONObject(i);
-                if (!toolTypeName.equals(jo.optString("toolType"))) continue;
-
-                int toolCount = jo.optInt("toolCount", 0);
-                if (toolCount <= 0) break;
-
-                String toolId = jo.optString("toolId", "");
-                s = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, toolTypeName);
-
-                jo = new JSONObject(s);
-                memo = jo.optString("memo", "");
-                if (ResChecker.checkRes(TAG, jo)) {
-                    Log.farm("使用道具🎭[" + toolTypeName + "]#剩余" + (toolCount - 1) + "张");
-                    return true;
-                } else {
-                    Log.record(memo);
+    private Boolean useFarmTool(String targetFarmId, ToolType toolType) {
+        try {
+            String s = AntFarmRpcCall.listFarmTool();
+            JSONObject jo = new JSONObject(s);
+            String memo = jo.getString("memo");
+            if (ResChecker.checkRes(TAG, jo)) {
+                JSONArray jaToolList = jo.getJSONArray("toolList");
+                for (int i = 0; i < jaToolList.length(); i++) {
+                    jo = jaToolList.getJSONObject(i);
+                    if (toolType.name().equals(jo.getString("toolType"))) {
+                        int toolCount = jo.getInt("toolCount");
+                        if (toolCount > 0) {
+                            String toolId = "";
+                            if (jo.has("toolId"))
+                                toolId = jo.getString("toolId");
+                            s = AntFarmRpcCall.useFarmTool(targetFarmId, toolId, toolType.name());
+                            jo = new JSONObject(s);
+                            memo = jo.getString("memo");
+                            if (ResChecker.checkRes(TAG, jo)) {
+                                Log.farm("使用道具🎭[" + toolType.nickName() + "]#剩余" + (toolCount - 1) + "张");
+                                return true;
+                            } else {
+                                Log.record(memo);
+                            }
+                            Log.runtime(s);
+                        }
+                        break;
+                    }
                 }
+            } else {
+                Log.record(memo);
                 Log.runtime(s);
-                break; // 不管成功与否只尝试一次
             }
-        } else {
-            Log.record(memo);
-            Log.runtime(s);
+        } catch (Throwable t) {
+            Log.runtime(TAG, "useFarmTool err:");
+            Log.printStackTrace(TAG, t);
         }
-    } catch (Throwable t) {
-        Log.runtime(TAG, "useFarmTool err:");
-        Log.printStackTrace(TAG, t);
+        return false;
     }
-    return false;
-}
 
 
     private void feedFriend() {
