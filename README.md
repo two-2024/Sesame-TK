@@ -10,7 +10,7 @@
 
 ## 💻本人不是专业的开发者，仅仅是一名热爱开源的爱好者
 
-### 📢欢迎大家提出宝贵意见，共同完善此项目
+### 📢咸鱼大佬更新啥我抄袭啥~
 
 > ### ~~墙内不再更新~~ 有缘再见~
 
@@ -269,8 +269,9 @@
 
 ## 协议说明
 自 **北京时间2024年7月15日开始** 提交的所有代码 ，遵循 GPLv3 协议，并禁止用于任何商业用途、禁止二次修改后闭源发布
+<br>自 **北京时间2025年7月23日开始** 提交的所有代码 ，遵循 [WTFPL](https://www.wtfpl.net/) 协议 **你他妈想干嘛就干嘛**
 
-## 鸣谢
+## 鸣谢 感谢前人的辛苦贡献
 
 <a href="https://github.com/Fansirsqi/Sesame-TK/graphs/contributors">  
   <img src="https://contrib.rocks/image?repo=Fansirsqi/Sesame-TK"  alt="contributors"/>  
