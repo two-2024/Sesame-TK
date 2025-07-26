@@ -128,15 +128,12 @@ jobs:
           message: |
             📦 *普通新版本 ${{ steps.generate_version.outputs.version }} Build!*
 
-            - Files: 
-              - Normal: `${{ steps.extract_apks.outputs.signed_normal }}`
-              - Compatible: `${{ steps.extract_apks.outputs.signed_compatible }}`
-            - Branch: `${{ github.ref_name }}`
-            - Triggered by: `${{ github.actor }}`
+            - 分支: `${{ github.ref_name }}`
+            - 触发者: `${{ github.actor }}`
 
             *下载说明:*
-              * Normal 为正常版本,适用于`Android 8.0`及以上的系统
-              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
+              * Normal 为正常版本,适用于`Android 8.0`及以上的系统*
+              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`*
 
             ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
           format: markdown
