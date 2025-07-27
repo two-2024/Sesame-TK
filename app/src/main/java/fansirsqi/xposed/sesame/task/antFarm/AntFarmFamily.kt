@@ -331,9 +331,9 @@ data object AntFarmFamily {
             val currentTime = Calendar.getInstance()
             currentTime.get(Calendar.HOUR_OF_DAY)
             currentTime.get(Calendar.MINUTE)
-            // 6-10点早安时间
+            // 8-10点早安时间
             val startTime = Calendar.getInstance()
-            startTime.set(Calendar.HOUR_OF_DAY, 6)
+            startTime.set(Calendar.HOUR_OF_DAY, 8)
             startTime.set(Calendar.MINUTE, 0)
             val endTime = Calendar.getInstance()
             endTime.set(Calendar.HOUR_OF_DAY, 10)
@@ -362,8 +362,8 @@ data object AntFarmFamily {
                 val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
                 if (ResChecker.checkRes(TAG, resp2)) {
                     GlobalThreadPools.sleep(500)
-                    val content = resp1.getString("content")
-                    val deliverId = resp1.getString("deliverId")
+                    val content = resp2.getString("content")  // ✅ 修正这里
+                    val deliverId = resp2.getString("deliverId") // ✅ 修正这里
                     val resp3 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
                     if (ResChecker.checkRes(TAG, resp3)) {
                         Log.farm("家庭任务🏠道早安: $content 🌈")
