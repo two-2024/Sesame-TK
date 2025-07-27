@@ -185,7 +185,7 @@ android {
         } catch (_: Exception) {
             "000000"
         }
-        val fileName = "Sesame-TK-$flavorName-$dateCode-ALLG.apk"
+        val fileName = "Sesame-TK-$flavorName-${variant.versionName}.apk"
         (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
     }
 }
