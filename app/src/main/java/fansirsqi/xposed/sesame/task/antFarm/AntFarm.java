@@ -2760,24 +2760,16 @@ public class AntFarm extends ModelTask {
             if (familyAwardNum > 0 && familyOptions.getValue().contains("familyClaimReward")) {
                 AntFarmFamily.INSTANCE.familyClaimRewardList();
             }
-            //道早安
-            if (familyOptions.getValue().contains("deliverMsgSend")) {
-    // 判断当前时间是否在 08:00 ~ 10:00 之间
-    Calendar calendar = Calendar.getInstance();
-    int hour = calendar.get(Calendar.HOUR_OF_DAY);
-    if (hour >= 8 && hour < 10) {
-        try {
-            String ariverRpcTraceId = java.util.UUID.randomUUID().toString();
-            AntFarmRpcCall.deliverContentExpand(new JSONArray(familyUserIds), ariverRpcTraceId);
-            Log.runtime(TAG, "道早安成功，已发送给：" + familyUserIds.size() + " 位成员");
-        } catch (Throwable e) {
-            Log.runtime(TAG, "道早安失败");
-            Log.printStackTrace(TAG, e);
-        }
-    } else {
-        Log.runtime(TAG, "未在早上 8:00-10:00 之间，道早安未执行");
+            // 道早安（调用 Kotlin 方法）
+if (familyOptions.getValue().contains("deliverMsgSend")) {
+    try {
+        AntFarmFamily.INSTANCE.deliverMsgSend(familyUserIds);
+    } catch (Throwable e) {
+        Log.runtime(TAG, "调用 AntFarmFamily.deliverMsgSend() 道早安失败");
+        Log.printStackTrace(TAG, e);
     }
 }
+
 
             //帮喂成员
             if (familyOptions.getValue().contains("feedFriendAnimal")) {
