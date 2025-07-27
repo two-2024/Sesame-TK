@@ -759,7 +759,11 @@ public class AntForestRpcCall {
         String args = "[" + params + "]";
         return RequestManager.requestString("com.alipay.antieptask.finishTaskopengreen", args);
     }
-
+    //pk
+public static String queryTopEnergyChallengeRanking() {
+        String args = "[{\"source\":\"chInfo_ch_appcenter__chsub_9patch\"}]";
+        return RequestManager.requestString("alipay.antforest.forest.h5.queryTopEnergyChallengeRanking", args);
+    }
 }
 
 
