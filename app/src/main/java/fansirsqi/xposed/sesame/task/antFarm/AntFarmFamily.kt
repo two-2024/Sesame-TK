@@ -347,7 +347,7 @@ data object AntFarmFamily {
         if (familyUserIds.isEmpty()) return
         
         // [4] 添加随机延迟 (0~2分钟)
-        Thread.sleep((0..120_000).random())
+        Thread.sleep((0..120_000).random().toLong())
         
         // [5] 执行RPC调用
         val userIds = JSONArray().apply {
