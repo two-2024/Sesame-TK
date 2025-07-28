@@ -322,7 +322,7 @@ data object AntFarmFamily {
     }
 
 
-    /**
+   /**
      * 发送道早安
      * @param familyUserIds 家庭成员列表
      */
@@ -331,9 +331,9 @@ data object AntFarmFamily {
             val currentTime = Calendar.getInstance()
             currentTime.get(Calendar.HOUR_OF_DAY)
             currentTime.get(Calendar.MINUTE)
-            // 8-10点早安时间
+            // 6-10点早安时间
             val startTime = Calendar.getInstance()
-            startTime.set(Calendar.HOUR_OF_DAY, 8)
+            startTime.set(Calendar.HOUR_OF_DAY, 6)
             startTime.set(Calendar.MINUTE, 0)
             val endTime = Calendar.getInstance()
             endTime.set(Calendar.HOUR_OF_DAY, 10)
@@ -361,13 +361,15 @@ data object AntFarmFamily {
                 val ariverRpcTraceId = resp1.getString("ariverRpcTraceId")
                 val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
                 if (ResChecker.checkRes(TAG, resp2)) {
-                    GlobalThreadPools.sleep(500)
-                    val content = resp2.getString("content")  // ✅ 修正这里
-                    val deliverId = resp2.getString("deliverId") // ✅ 修正这里
-                    val resp3 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
+                    val deliverId = resp2.getString("deliverId")
+                    val resp3 = JSONObject(AntFarmRpcCall.QueryExpandContent(deliverId))
                     if (ResChecker.checkRes(TAG, resp3)) {
-                        Log.farm("家庭任务🏠道早安: $content 🌈")
-                        Status.setFlagToday("antFarm::deliverMsgSend")
+                        val content = resp3.getString("content")
+                        val resp4 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
+                        if (ResChecker.checkRes(TAG, resp4)) {
+                            Log.farm("家庭任务🏠道早安: $content 🌈")
+                            Status.setFlagToday("antFarm::deliverMsgSend")
+                        }
                     }
                 }
             }
@@ -375,6 +377,7 @@ data object AntFarmFamily {
             Log.printStackTrace(TAG, "deliverMsgSend err:", t)
         }
     }
+
 
 
     /**
