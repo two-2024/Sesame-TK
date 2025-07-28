@@ -1,9 +1,4 @@
-![Sesame-TK]
-[![wtfpl](http://www.wtfpl.net/wp-content/uploads/2012/12/wtfpl-badge-4.png)](http://www.wtfpl.net/)<br>
-[![Latest Release](https://img.shields.io/github/release/ALLG999/Sesame-TK?labelColor=fff&label=Releases&logo=gitlfs)](../../releases)  
-[![All Releases Download](https://img.shields.io/github/downloads/ALLG999/Sesame-TK/total?labelColor=fff&label=Downloads&logo=codefresh)](../../releases)  
-[![Telegram-Channel](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Channel&labelColor=fff&link=https%3A%2F%2Ft.me%2FSesame_TK_Channel)](https://t.me/Sesame_TK_Channel)  
-[![Telegram-Group](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Group&labelColor=fff&link=https%3A%2F%2Ft.me%2Ffansirsqi_xposed_sesame)](https://t.me/fansirsqi_xposed_sesame)  
+
 
 
        
@@ -13,7 +8,6 @@
 
 ### 📢咸鱼大佬更新啥我抄袭啥~
 
-> ### ~~墙内不再更新~~ 有缘再见~
 
 > ### 非官方编译，别问安装的时候为啥签名冲突，因为我不会！
 
