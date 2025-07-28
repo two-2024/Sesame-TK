@@ -10,7 +10,7 @@ import java.net.URL
 
 object FansirsqiUtil {
     // 定义一言API的URL
-    private const val HITOKOTO_API_URL = "https://v1.hitokoto.cn/"
+    private const val HITOKOTO_API_URL = "https://60s.cccccc.plus/v2/hitokoto"
 
     /**
      * 获取一言（挂起函数），推荐在协程中使用
@@ -23,21 +23,25 @@ object FansirsqiUtil {
             connection.connectTimeout = 5000
             connection.readTimeout = 5000
 
-            val response = BufferedReader(InputStreamReader(connection.inputStream)).use { reader ->
-                reader.readText()
-            }
+//            val response = BufferedReader(InputStreamReader(connection.inputStream)).use { reader ->
+//                reader.readText()
+//            }
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
 
             val jsonObject = JSONObject(response)
-            val hitokoto = jsonObject.optString(
+            // 从data字段中获取嵌套的JSON对象
+            val dataObject = jsonObject.getJSONObject("data")
+            // 从data对象中提取hitokoto字段
+            val hitokoto = dataObject.optString(
                 "hitokoto",
-                " 去年相送，余杭门外，飞雪似杨花。\n今年春尽，杨花似雪，犹不见还家。"
+                " 记得好好吃饭。"
             )
-            val from = jsonObject.optString("from", "少年游·润州作代人寄远 苏轼")
+//            val from = jsonObject.optString("from", "少年游·润州作代人寄远 苏轼")
 
-            "$hitokoto\n\n                    -----Re: $from"
+            "$hitokoto\n\n                    -----By：《 F ❤ C 》"
         } catch (e: Exception) {
             Log.printStackTrace(e)
-            " 去年相送，余杭门外，飞雪似杨花。\n今年春尽，杨花似雪，犹不见还家。\n\n                    -----Re: 少年游·润州作代人寄远 苏轼"
+            " 记得好好吃饭。\n\n                    -----By：《 F ❤ C 》"
         }
     }
 
