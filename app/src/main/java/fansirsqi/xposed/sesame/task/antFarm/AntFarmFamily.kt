@@ -327,56 +327,86 @@ data object AntFarmFamily {
      * @param familyUserIds 家庭成员列表
      */
     fun deliverMsgSend(familyUserIds: MutableList<String>) {
+    try {
+        // [1] 时间窗口检查（保持原逻辑）
+        val currentTime = Calendar.getInstance()
+        val startTime = Calendar.getInstance().apply { 
+            set(Calendar.HOUR_OF_DAY, 6); set(Calendar.MINUTE, 0) 
+        }
+        val endTime = Calendar.getInstance().apply { 
+            set(Calendar.HOUR_OF_DAY, 10); set(Calendar.MINUTE, 0) 
+        }
+        if (currentTime.before(startTime) || currentTime.after(endTime)) return
+        
+        // [2] 关键参数检查
+        if (groupId.isNullOrEmpty() || familyUserIds.isEmpty()) return
+        if (Status.hasFlagToday("antFarm::deliverMsgSend")) return
+        
+        // [3] 移除非家庭成员
+        familyUserIds.remove(UserMap.currentUid)
+        if (familyUserIds.isEmpty()) return
+        
+        // [4] 添加随机延迟 (0~2分钟)
+        Thread.sleep((0..120_000).random())
+        
+        // [5] 执行RPC调用
+        val userIds = JSONArray().apply {
+            familyUserIds.forEach { put(it) }
+        }
+        
+        // 第一步：推荐主题
+        val resp1 = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
+        if (!ResChecker.checkRes(TAG, resp1)) return
+        
+        // 第二步：生成内容
+        val traceId = resp1.getString("ariverRpcTraceId")
+        val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, traceId))
+        if (!ResChecker.checkRes(TAG, resp2)) return
+        
+        // 第三步：获取内容
+        val deliverId = resp2.getString("deliverId")
+        val resp3 = JSONObject(AntFarmRpcCall.QueryExpandContent(deliverId))
+        if (!ResChecker.checkRes(TAG, resp3)) return
+        
+        // 第四步：发送（带重试机制）
+        val content = resp3.getString("content")
+        sendWithRetry(groupId, userIds, content, deliverId, maxRetry = 3)
+        
+    } catch (t: Throwable) {
+        Log.printStackTrace(TAG, "deliverMsgSend err:", t)
+    }
+}
+
+private fun sendWithRetry(
+    groupId: String, 
+    userIds: JSONArray, 
+    content: String, 
+    deliverId: String, 
+    maxRetry: Int
+) {
+    var retry = 0
+    while (retry < maxRetry) {
         try {
-            val currentTime = Calendar.getInstance()
-            currentTime.get(Calendar.HOUR_OF_DAY)
-            currentTime.get(Calendar.MINUTE)
-            // 6-10点早安时间
-            val startTime = Calendar.getInstance()
-            startTime.set(Calendar.HOUR_OF_DAY, 6)
-            startTime.set(Calendar.MINUTE, 0)
-            val endTime = Calendar.getInstance()
-            endTime.set(Calendar.HOUR_OF_DAY, 10)
-            endTime.set(Calendar.MINUTE, 0)
-            if (currentTime.before(startTime) || currentTime.after(endTime)) {
-                return
-            }
-            if (Objects.isNull(groupId)) {
-                return
-            }
-            // 先移除当前用户自己的ID，否则下面接口报错
-            familyUserIds.remove(UserMap.currentUid)
-            if (familyUserIds.isEmpty()) {
-                return
-            }
-            if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
-                return
-            }
-            val userIds = JSONArray()
-            for (userId in familyUserIds) {
-                userIds.put(userId)
-            }
-            val resp1 = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
-            if (ResChecker.checkRes(TAG, resp1)) {
-                val ariverRpcTraceId = resp1.getString("ariverRpcTraceId")
-                val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
-                if (ResChecker.checkRes(TAG, resp2)) {
-                    val deliverId = resp2.getString("deliverId")
-                    val resp3 = JSONObject(AntFarmRpcCall.QueryExpandContent(deliverId))
-                    if (ResChecker.checkRes(TAG, resp3)) {
-                        val content = resp3.getString("content")
-                        val resp4 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
-                        if (ResChecker.checkRes(TAG, resp4)) {
-                            Log.farm("家庭任务🏠道早安: $content 🌈")
-                            Status.setFlagToday("antFarm::deliverMsgSend")
-                        }
-                    }
+            val resp4 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
+            when {
+                ResChecker.checkRes(TAG, resp4) -> {
+                    Log.farm("家庭任务🏠道早安: $content 🌈")
+                    Status.setFlagToday("antFarm::deliverMsgSend")
+                    return
                 }
+                resp4.optInt("errorNo") == 3 -> {
+                    Thread.sleep(2000L * (retry + 1)) // 指数退避
+                    retry++
+                }
+                else -> return // 其他错误退出
             }
-        } catch (t: Throwable) {
-            Log.printStackTrace(TAG, "deliverMsgSend err:", t)
+        } catch (e: Exception) {
+            Log.printStackTrace(TAG, "sendWithRetry fail(retry=$retry)", e)
+            Thread.sleep(3000)
+            retry++
         }
     }
+}
 
 
 
