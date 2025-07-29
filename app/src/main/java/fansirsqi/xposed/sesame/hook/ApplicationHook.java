@@ -106,14 +106,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     private static PowerManager.WakeLock wakeLock;
     private static PendingIntent alarm0Pi;
 
-    // 添加初始化状态跟踪
-    private static volatile boolean isHandlerInitialized = false;
-
     public static void setOffline(boolean offline) {
         ApplicationHook.offline = offline;
     }
 
-    private volatile long lastExecTime = 0;
+    private volatile long lastExecTime = 0; // 添加为类成员变量
 
     private XC_LoadPackage.LoadPackageParam modelLoadPackageParam;
 
@@ -126,21 +123,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         dayCalendar.set(Calendar.SECOND, 0);
     }
 
-    /**
-     * 确保Handler组件已初始化
-     */
-    private static synchronized void ensureHandlerInitialized() {
-        if (!isHandlerInitialized) {
-            if (mainHandler == null) {
-                mainHandler = new Handler(Looper.getMainLooper());
-                Log.debug(TAG, "MainHandler initialized via ensure");
-            }
-            isHandlerInitialized = true;
-        }
-    }
 
     /**
      * 调度定时执行
+     *
+     * @param lastExecTime 上次执行时间
      */
     private void scheduleNextExecution(long lastExecTime) {
         try {
@@ -174,6 +161,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         }
     }
 
+
     @SuppressLint("UnsafeDynamicallyLoadedCode")
     private void loadNativeLibs(Context context, File soFile) {
         try {
@@ -199,6 +187,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                         moduleContext = (Context) param.thisObject;
+                        // 可以在这里调用其他需要 Context 的 Hook 方法
                         HookUtil.INSTANCE.hookActive(loadPackageParam);
                     }
                 });
@@ -289,9 +278,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         new XC_MethodHook() {
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) {
-                                // 确保第一时间初始化Handler
-                                ensureHandlerInitialized();
-                                
+                                mainHandler = new Handler(Looper.getMainLooper());
                                 Service appService = (Service) param.thisObject;
                                 if (!General.CURRENT_USING_SERVICE.equals(appService.getClass().getCanonicalName())) {
                                     return;
@@ -306,6 +293,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 String packageName = loadPackageParam.packageName;
                                 String apkPath = loadPackageParam.appInfo.sourceDir;
                                 try (DexKitBridge bridge = DexKitBridge.create(apkPath)) {
+                                    // Other use cases
                                     Log.runtime(TAG, "hook dexkit successfully");
                                 }
                                 service = appService;
@@ -333,7 +321,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                             reLogin();
                                             return;
                                         }
-                                        lastExecTime = currentTime;
+                                        lastExecTime = currentTime; // 更新最后执行时间
                                         ModelTask.startAllTask(false);
                                         scheduleNextExecution(lastExecTime);
                                     } catch (Exception e) {
@@ -346,13 +334,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 if (initHandler(true)) {
                                     init = true;
                                 }
-                                
-                                // 启动第一次任务调度（确保在初始化完成后）
-                                execDelayedHandler(BaseModel.getCheckInterval().getValue());
                             }
                         }
 
                 );
+                execDelayedHandler(BaseModel.getCheckInterval().getValue());
                 Log.runtime(TAG, "hook service onCreate successfully");
             } catch (Throwable t) {
                 Log.runtime(TAG, "hook service onCreate err");
@@ -478,8 +464,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     @SuppressLint("WakelockTimeout")
     private synchronized Boolean initHandler(Boolean force) {
         try {
-            destroyHandler(force);
-            Model.initAllModel();
+            destroyHandler(force); // 销毁之前的处理程序
+            Model.initAllModel(); //在所有服务启动前装模块配置
             if (service == null) {
                 return false;
             }
@@ -496,55 +482,56 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 Log.record(TAG, startMsg);
                 Log.record(TAG, "⚙️模块版本：" + modelVersion);
                 Log.record(TAG, "📦应用版本：" + alipayVersion.getVersionString());
-                Config.load(userId);
+                Config.load(userId);//加载配置
                 if (!Config.isLoaded()) {
                     Log.record(TAG, "用户模块配置加载失败");
                     Toast.show("用户模块配置加载失败");
                     return false;
                 }
+                //闹钟权限申请
                 if (!PermissionUtil.checkAlarmPermissions()) {
                     Log.record(TAG, "❌ 支付宝无闹钟权限");
-                    if (mainHandler != null) {
-                        mainHandler.postDelayed(
-                                () -> {
-                                    if (!PermissionUtil.checkOrRequestAlarmPermissions(appContext)) {
-                                        Toast.show("请授予支付宝使用闹钟权限");
-                                    }
-                                },
-                                2000);
-                    }
+                    mainHandler.postDelayed(
+                            () -> {
+                                if (!PermissionUtil.checkOrRequestAlarmPermissions(appContext)) {
+                                    Toast.show("请授予支付宝使用闹钟权限");
+                                }
+                            },
+                            2000);
                     return false;
                 }
+                // 检查并请求后台运行权限
                 if (BaseModel.getBatteryPerm().getValue() && !init && !PermissionUtil.checkBatteryPermissions()) {
                     Log.record(TAG, "支付宝无始终在后台运行权限");
-                    if (mainHandler != null) {
-                        mainHandler.postDelayed(
-                                () -> {
-                                    if (!PermissionUtil.checkOrRequestBatteryPermissions(appContext)) {
-                                        Toast.show("请授予支付宝始终在后台运行权限");
-                                    }
-                                },
-                                2000);
-                    }
+                    mainHandler.postDelayed(
+                            () -> {
+                                if (!PermissionUtil.checkOrRequestBatteryPermissions(appContext)) {
+                                    Toast.show("请授予支付宝始终在后台运行权限");
+                                }
+                            },
+                            2000);
                 }
                 Notify.start(service);
+                // 获取 BaseModel 实例
                 BaseModel baseModel = Model.getModel(BaseModel.class);
                 if (baseModel == null) {
                     Log.error(TAG, "BaseModel 未找到 初始化失败");
                     Notify.setStatusTextDisabled();
                     return false;
                 }
+                // 检查 enableField 的值
                 if (!baseModel.getEnableField().getValue()) {
                     Log.record(TAG, "❌ 芝麻粒已禁用");
                     Toast.show("❌ 芝麻粒已禁用");
                     Notify.setStatusTextDisabled();
                     return false;
                 }
+                // 保持唤醒锁，防止设备休眠
                 if (BaseModel.getStayAwake().getValue()) {
                     try {
                         PowerManager pm = (PowerManager) service.getSystemService(Context.POWER_SERVICE);
                         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, service.getClass().getName());
-                        wakeLock.acquire();
+                        wakeLock.acquire(); // 确保唤醒锁在前台服务启动前
                     } catch (Throwable t) {
                         Log.record(TAG, "唤醒锁申请失败:");
                         Log.printStackTrace(t);
@@ -585,6 +572,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
 
     /**
      * 销毁处理程序
+     *
+     * @param force 是否强制销毁
      */
     static synchronized void destroyHandler(Boolean force) {
         try {
@@ -617,39 +606,17 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     }
 
     static void execHandler() {
-        if (mainTask != null) {
-            mainTask.startTask(false);
-        } else {
-            Log.error(TAG, "mainTask is null in execHandler");
-        }
+        mainTask.startTask(false);
     }
 
     /**
-     * 安排主任务在指定的延迟时间后执行
+     * 安排主任务在指定的延迟时间后执行，并更新通知中的下次执行时间。
+     *
+     * @param delayMillis 延迟执行的毫秒数
      */
     static void execDelayedHandler(long delayMillis) {
-        ensureHandlerInitialized(); // 确保Handler已初始化
-        
-        if (mainHandler == null) {
-            Log.error(TAG, "mainHandler is still null in execDelayedHandler");
-            return;
-        }
-
         mainHandler.postDelayed(
-                () -> {
-                    try {
-                        if (mainTask != null) {
-                            mainTask.startTask(true);
-                        } else {
-                            Log.error(TAG, "mainTask is null in delayed execution");
-                        }
-                    } catch (Exception e) {
-                        Log.printStackTrace(TAG, e);
-                    }
-                }, 
-                delayMillis
-        );
-        
+                () -> mainTask.startTask(true), delayMillis);
         try {
             Notify.updateNextExecText(System.currentTimeMillis() + delayMillis);
         } catch (Exception e) {
@@ -658,9 +625,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     }
 
     private static void stopHandler() {
-        if (mainTask != null) {
-            mainTask.stopTask();
-        }
+        mainTask.stopTask();
         ModelTask.stopAllTask();
     }
 
@@ -825,13 +790,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     }
 
     public static void reLogin() {
-        ensureHandlerInitialized(); // 确保Handler可用
-        
-        if (mainHandler == null) {
-            Log.error(TAG, "mainHandler is null in reLogin");
-            return;
-        }
-        
         mainHandler.post(
                 () -> {
                     if (reLoginCount.get() < 5) {
@@ -843,11 +801,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                     intent.setClassName(General.PACKAGE_NAME, General.CURRENT_USING_ACTIVITY);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     offline = true;
-                    if (appContext != null) {
-                        appContext.startActivity(intent);
-                    } else {
-                        Log.error(TAG, "appContext is null in reLogin");
-                    }
+                    appContext.startActivity(intent);
                 });
     }
 
@@ -889,8 +843,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                             String method = intent.getStringExtra("method");
                             String data = intent.getStringExtra("data");
                             String type = intent.getStringExtra("type");
-                            DebugRpc rpcInstance = new DebugRpc();
-                            rpcInstance.start(method, data, type);
+                            DebugRpc rpcInstance = new DebugRpc(); // 创建实例
+                            rpcInstance.start(method, data, type); // 通过实例调用非静态方法
                         } catch (Throwable th) {
                             Log.runtime(TAG, "sesame 测试RPC请求失败:");
                             Log.printStackTrace(TAG, th);
@@ -904,20 +858,30 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     }
 
     /**
-     * 注册广播接收器
+     * 注册广播接收器以监听支付宝相关动作。
+     *
+     * @param context 应用程序上下文
      */
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    // 忽略Lint关于注册广播接收器时未指定导出属性的警告
     void registerBroadcastReceiver(Context context) {
+        //创建一个IntentFilter实例，用于过滤出我们需要捕获的广播
         try {
             IntentFilter intentFilter = getIntentFilter();
+            // 根据Android SDK版本注册广播接收器
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // 在Android 13及以上版本，注册广播接收器并指定其可以被其他应用发送的广播触发
                 context.registerReceiver(new AlipayBroadcastReceiver(), intentFilter, Context.RECEIVER_EXPORTED);
             } else {
+                // 在Android 13以下版本，注册广播接收器
                 context.registerReceiver(new AlipayBroadcastReceiver(), intentFilter);
             }
+            // 记录成功注册广播接收器的日志
             Log.runtime(TAG, "hook registerBroadcastReceiver successfully");
         } catch (Throwable th) {
+            // 记录注册广播接收器失败的日志
             Log.runtime(TAG, "hook registerBroadcastReceiver err:");
+            // 打印异常堆栈信息
             Log.printStackTrace(TAG, th);
         }
     }
@@ -925,11 +889,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     @NonNull
     private static IntentFilter getIntentFilter() {
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.restart");
-        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.execute");
-        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.reLogin");
-        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.status");
-        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.rpctest");
+        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.restart"); // 重启支付宝服务的动作
+        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.execute"); // 执行特定命令的动作
+        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.reLogin"); // 重新登录支付宝的动作
+        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.status"); // 查询支付宝状态的动作
+        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.rpctest"); // 调试RPC的动作
         return intentFilter;
     }
 }
