@@ -2760,17 +2760,6 @@ public class AntFarm extends ModelTask {
             if (familyAwardNum > 0 && familyOptions.getValue().contains("familyClaimReward")) {
                 AntFarmFamily.INSTANCE.familyClaimRewardList();
             }
-            // 道早安（调用 Kotlin 方法）
-if (familyOptions.getValue().contains("deliverMsgSend")) {
-    try {
-        AntFarmFamily.INSTANCE.deliverMsgSend(familyUserIds);
-    } catch (Throwable e) {
-        Log.runtime(TAG, "调用 AntFarmFamily.deliverMsgSend() 道早安失败");
-        Log.printStackTrace(TAG, e);
-    }
-}
-
-
             //帮喂成员
             if (familyOptions.getValue().contains("feedFriendAnimal")) {
                 familyFeedFriendAnimal(animals);
@@ -2779,7 +2768,10 @@ if (familyOptions.getValue().contains("deliverMsgSend")) {
             if (familyOptions.getValue().contains("eatTogetherConfig")) {
                 familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds);
             }
-
+            //道早安
+            if (familyOptions.getValue().contains("deliverMsgSend")) {
+                deliverMsgSend(familyUserIds);
+            }
             //好友分享
             if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
                 inviteFriendVisitFamily(familyUserIds);
