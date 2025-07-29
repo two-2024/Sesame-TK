@@ -2760,17 +2760,6 @@ public class AntFarm extends ModelTask {
             if (familyAwardNum > 0 && familyOptions.getValue().contains("familyClaimReward")) {
                 AntFarmFamily.INSTANCE.familyClaimRewardList();
             }
-            // 道早安（调用 Kotlin 方法）
-if (familyOptions.getValue().contains("deliverMsgSend")) {
-    try {
-        AntFarmFamily.INSTANCE.deliverMsgSend(familyUserIds);
-    } catch (Throwable e) {
-        Log.runtime(TAG, "调用 AntFarmFamily.deliverMsgSend() 道早安失败");
-        Log.printStackTrace(TAG, e);
-    }
-}
-
-
             //帮喂成员
             if (familyOptions.getValue().contains("feedFriendAnimal")) {
                 familyFeedFriendAnimal(animals);
@@ -2779,7 +2768,10 @@ if (familyOptions.getValue().contains("deliverMsgSend")) {
             if (familyOptions.getValue().contains("eatTogetherConfig")) {
                 familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds);
             }
-
+            //道早安
+            if (familyOptions.getValue().contains("deliverMsgSend")) {
+                deliverMsgSend(familyUserIds);
+            }
             //好友分享
             if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
                 inviteFriendVisitFamily(familyUserIds);
@@ -3102,7 +3094,68 @@ if (familyOptions.getValue().contains("deliverMsgSend")) {
             Log.printStackTrace(TAG, t);
         }
     }
-
+        /**
+     * 道早安
+     *
+     */
+private void deliverMsgSend(List<String> friendUserIds) {
+        try {
+            Calendar currentTime = Calendar.getInstance();
+            currentTime.get(Calendar.HOUR_OF_DAY);
+            currentTime.get(Calendar.MINUTE);
+            // 6-10点早安时间
+            final int START_HOUR = 6;
+            final int START_MINUTE = 0;
+            final int END_HOUR = 10;
+            final int END_MINUTE = 0;
+            Calendar startTime = Calendar.getInstance();
+            startTime.set(Calendar.HOUR_OF_DAY, START_HOUR);
+            startTime.set(Calendar.MINUTE, START_MINUTE);
+            Calendar endTime = Calendar.getInstance();
+            endTime.set(Calendar.HOUR_OF_DAY, END_HOUR);
+            endTime.set(Calendar.MINUTE, END_MINUTE);
+            if (currentTime.before(startTime) || currentTime.after(endTime)) {
+                return;
+            }
+            if (Objects.isNull(familyGroupId)) {
+                return;
+            }
+            // 先移除当前用户自己的ID，否则下面接口报错
+            friendUserIds.remove(UserMap.getCurrentUid());
+            if (friendUserIds.isEmpty()) {
+                return;
+            }
+            if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
+                return;
+            }
+            JSONArray userIds = new JSONArray();
+            for (String userId : friendUserIds) {
+                userIds.put(userId);
+            }
+            String requestString = AntFarmRpcCall.deliverSubjectRecommend(userIds);
+            JSONObject jo = new JSONObject(requestString);
+            if (jo.optBoolean("success")) {
+                GlobalThreadPools.sleep(500);
+                jo = new JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, jo.toString().substring(1, jo.toString().length() - 1)));
+                if (jo.optBoolean("success")) {
+                    GlobalThreadPools.sleep(500);
+                    String content = jo.getString("content");
+                    String deliverId = jo.getString("deliverId");
+                    jo = new JSONObject(AntFarmRpcCall.deliverMsgSend(familyGroupId, userIds, content, deliverId));
+                    if (jo.optBoolean("success")) {
+                        Log.farm("亲密家庭🏠提交任务[道早安]");
+                        Status.setFlagToday("antFarm::deliverMsgSend");
+                        GlobalThreadPools.sleep(500);
+                        syncFamilyStatusIntimacy(familyGroupId);
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.runtime(TAG, "deliverMsgSend err:");
+            Log.printStackTrace(TAG, t);
+        }
+    }
+    
     /**
      * 点击领取活动食物
      *
