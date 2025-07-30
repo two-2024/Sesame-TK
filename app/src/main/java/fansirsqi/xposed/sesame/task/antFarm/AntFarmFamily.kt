@@ -320,7 +320,11 @@ data object AntFarmFamily {
         }
         return null
     }
-
+    
+    /**
+     * 道早安
+     */
+     @JvmStatic
 fun deliverMsgSend(familyUserIds: MutableList<String>) {
     try {
         val currentTime = Calendar.getInstance()
