@@ -345,27 +345,37 @@ private fun deliverMsgSend(friendUserIds: MutableList<String>) {
         if (currentTime.before(startTime) || currentTime.after(endTime)) return
         if (familyGroupId == null) return
 
-        // 先移除当前用户自己的ID，否则下面接口报错
+        // 先移除当前用户自己的ID，否则接口可能报错
         friendUserIds.remove(UserMap.getCurrentUid())
         if (friendUserIds.isEmpty()) return
 
+        // 防止重复提交
         if (Status.hasFlagToday("antFarm::deliverMsgSend")) return
 
+        // 构造好友列表
         val userIds = JSONArray()
         friendUserIds.forEach { userId ->
             userIds.put(userId)
         }
 
+        // 调用推荐内容接口
         val requestString = AntFarmRpcCall.deliverSubjectRecommend(userIds)
         var jo = JSONObject(requestString)
         if (jo.optBoolean("success")) {
             GlobalThreadPools.sleep(500)
-            val traceId = jo.toString().substring(1, jo.toString().length - 1)
+
+            // 修复点：提取 traceId 而不是整个字符串
+            val traceId = jo.optString("ariverRpcTraceId")
+
+            // 调用内容扩展接口
             jo = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, traceId))
             if (jo.optBoolean("success")) {
                 GlobalThreadPools.sleep(500)
+
                 val content = jo.getString("content")
                 val deliverId = jo.getString("deliverId")
+
+                // 发送道早安消息
                 jo = JSONObject(AntFarmRpcCall.deliverMsgSend(familyGroupId, userIds, content, deliverId))
                 if (jo.optBoolean("success")) {
                     Log.farm("亲密家庭🏠提交任务[道早安]")
@@ -381,7 +391,6 @@ private fun deliverMsgSend(friendUserIds: MutableList<String>) {
     }
 }
 
-     
     /**
      * 好友分享家庭
      * @param familyUserIds 好友列表
