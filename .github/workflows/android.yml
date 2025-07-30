@@ -42,13 +42,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: 使用 Gradle 构建
-        run: |
-          ./gradlew clean
-          ./gradlew assembleNormalRelease assembleCompatibleRelease \
-          -Pversion=${{ github.ref_name }} \
-          --warning-mode all \
-          --stacktrace
-       # run: ./gradlew assembleNormalRelease assembleCompatibleRelease -Pversion=${{ github.ref_name }}
+        run: ./gradlew assembleNormalRelease assembleCompatibleRelease -Pversion=${{ github.ref_name }}
 
       - name: 查找 APK 并设置输出
         id: locate_apks
