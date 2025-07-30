@@ -3123,7 +3123,8 @@ public class AntFarm extends ModelTask {
             List<AntFarmFamilyOption> list = new ArrayList<>();
             list.add(new AntFarmFamilyOption("familySign", "每日签到"));
             list.add(new AntFarmFamilyOption("eatTogetherConfig", "请吃美食"));
-            list.add(new AntFarmFamilyOption("feedFamilyAnimal", "帮喂小鸡"));
+            //貌似帮喂拼写错误
+            list.add(new AntFarmFamilyOption("feedFriendAnimal", "帮喂小鸡"));
             list.add(new AntFarmFamilyOption("deliverMsgSend", "道早安"));
             list.add(new AntFarmFamilyOption("familyClaimReward", "领取奖励"));
             list.add(new AntFarmFamilyOption("inviteFriendVisitFamily", "好友分享"));
