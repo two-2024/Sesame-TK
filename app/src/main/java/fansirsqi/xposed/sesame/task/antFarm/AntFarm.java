@@ -36,6 +36,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.ListModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
+import fansirsqi.xposed.sesame.task.antFarm.AntFarmFamily;
 import fansirsqi.xposed.sesame.task.AnswerAI.AnswerAI;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
@@ -2770,7 +2771,7 @@ public class AntFarm extends ModelTask {
             }
             //道早安
             if (familyOptions.getValue().contains("deliverMsgSend")) {
-                deliverMsgSend(familyUserIds);
+                AntFarmFamily.deliverMsgSend(familyUserIds);
             }
             //好友分享
             if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
