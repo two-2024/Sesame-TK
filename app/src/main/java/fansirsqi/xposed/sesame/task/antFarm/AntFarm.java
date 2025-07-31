@@ -2777,7 +2777,73 @@ public class AntFarm extends ModelTask {
         }
          // 道早安
         if (familyOptions.getValue().contains("deliverMsgSend")) {
-            AntFarmFamily.INSTANCE.sendGoodMorning(familyUserIds);
+             public void family() {
+    if (StringUtil.isEmpty(familyGroupId)) return;
+
+    try {
+        JSONObject root = new JSONObject(AntFarmRpcCall.enterFamily());
+        if (!ResChecker.checkRes(TAG, root)) return;
+
+        familyGroupId = root.optString("groupId");
+        int familyAwardNum = root.optInt("familyAwardNum", 0);
+        boolean familySignTips = root.optBoolean("familySignTips", false);
+        //顶梁柱
+        JSONObject assignFamilyMemberInfo = root.optJSONObject("assignFamilyMemberInfo");
+        //美食配置
+        JSONObject eatTogetherConfig = root.optJSONObject("eatTogetherConfig");
+        //扭蛋
+        JSONObject familyDrawInfo = root.optJSONObject("familyDrawInfo");
+        JSONArray familyInteractActions = root.optJSONArray("familyInteractActions");
+        JSONArray animals = root.optJSONArray("animals");
+
+        // 提取所有家庭成员ID（排除当前用户的处理在具体任务中处理）
+        List<String> familyUserIds = new ArrayList<>();
+        if (animals != null) {
+            for (int i = 0; i < animals.length(); i++) {
+                JSONObject animal = animals.getJSONObject(i);
+                familyUserIds.add(animal.optString("userId"));
+            }
+        }
+
+        // 一、签到类任务
+        if (familySignTips && familyOptions.getValue().contains("familySign")) {
+            AntFarmFamily.INSTANCE.familySign();
+        }
+        if (familyAwardNum > 0 && familyOptions.getValue().contains("familyClaimReward")) {
+            AntFarmFamily.INSTANCE.familyClaimRewardList();
+        }
+
+        // 二、互动类任务
+         //帮喂成员
+        if (familyOptions.getValue().contains("feedFriendAnimal")) {
+            familyFeedFriendAnimal(animals);
+        }
+         //请吃美食
+        if (familyOptions.getValue().contains("eatTogetherConfig")) {
+            familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds);
+        }
+         // 道早安
+        if (familyOptions.getValue().contains("deliverMsgSend")) {
+            deliverMsgSend(familyUserIds);
+        }
+         //好友分享
+        if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
+            inviteFriendVisitFamily(familyUserIds);
+        }
+
+        // 三、抽奖类任务
+        boolean drawActivitySwitch = familyDrawInfo != null && familyDrawInfo.optBoolean("drawActivitySwitch", false);
+        if (drawActivitySwitch && familyOptions.getValue().contains("familyDrawInfo")) {
+            familyDrawTask(familyUserIds, familyDrawInfo);
+        }
+
+        // 四、后续可拓展任务：assignRights、batchInviteP2P...
+
+    } catch (Throwable t) {
+        Log.runtime(TAG, "family err:");
+        Log.printStackTrace(TAG, t);
+    }
+}(familyUserIds);
         }
          //好友分享
         if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
