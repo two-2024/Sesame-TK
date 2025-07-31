@@ -322,59 +322,64 @@ data object AntFarmFamily {
     }
 
 
-    /**
-     * 发送道早安
-     * @param familyUserIds 家庭成员列表
-     */
-    fun deliverMsgSend(familyUserIds: MutableList<String>) {
-        try {
-            val currentTime = Calendar.getInstance()
-            currentTime.get(Calendar.HOUR_OF_DAY)
-            currentTime.get(Calendar.MINUTE)
-            // 6-10点早安时间
-            val startTime = Calendar.getInstance()
-            startTime.set(Calendar.HOUR_OF_DAY, 6)
-            startTime.set(Calendar.MINUTE, 0)
-            val endTime = Calendar.getInstance()
-            endTime.set(Calendar.HOUR_OF_DAY, 10)
-            endTime.set(Calendar.MINUTE, 0)
-            if (currentTime.before(startTime) || currentTime.after(endTime)) {
-                return
-            }
-            if (Objects.isNull(groupId)) {
-                return
-            }
-            // 先移除当前用户自己的ID，否则下面接口报错
-            familyUserIds.remove(UserMap.currentUid)
-            if (familyUserIds.isEmpty()) {
-                return
-            }
-            if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
-                return
-            }
-            val userIds = JSONArray()
-            for (userId in familyUserIds) {
-                userIds.put(userId)
-            }
-            val resp1 = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
-            if (ResChecker.checkRes(TAG, resp1)) {
-                val ariverRpcTraceId = resp1.getString("ariverRpcTraceId")
-                val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
-                if (ResChecker.checkRes(TAG, resp2)) {
-                    GlobalThreadPools.sleep(500)
-                    val content = resp1.getString("content")
-                    val deliverId = resp1.getString("deliverId")
-                    val resp3 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
-                    if (ResChecker.checkRes(TAG, resp3)) {
-                        Log.farm("家庭任务🏠道早安: $content 🌈")
-                        Status.setFlagToday("antFarm::deliverMsgSend")
-                    }
-                }
-            }
-        } catch (t: Throwable) {
-            Log.printStackTrace(TAG, "deliverMsgSend err:", t)
+   /**
+ * 家庭任务：发送道早安（AI传话）
+ * @param familyUserIds 家庭成员列表（包含当前用户会自动剔除）
+ */
+fun deliverMsgSend(familyUserIds: MutableList<String>) {
+    try {
+        // 时间窗口检查（6:00 - 10:00）
+        val now = Calendar.getInstance()
+        val startTime = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 6)
+            set(Calendar.MINUTE, 0)
         }
+        val endTime = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 10)
+            set(Calendar.MINUTE, 0)
+        }
+        if (now.before(startTime) || now.after(endTime)) return
+
+        // 群组 ID 校验
+        val groupId = UserMap.groupId ?: return
+
+        // 移除当前用户自己（否则接口报错）
+        familyUserIds.remove(UserMap.currentUid)
+        if (familyUserIds.isEmpty()) return
+
+        // 当天只发送一次
+        if (Status.hasFlagToday("antFarm::deliverMsgSend")) return
+
+        // 构造 userIds JSONArray
+        val userIds = JSONArray().apply {
+            familyUserIds.forEach { put(it) }
+        }
+
+        // 第一步：推荐传话主题
+        val subjectResp = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
+        if (!ResChecker.checkRes(TAG, subjectResp)) return
+
+        val ariverRpcTraceId = subjectResp.optString("ariverRpcTraceId")
+        val content = subjectResp.optString("content")
+        val deliverId = subjectResp.optString("deliverId")
+
+        // 第二步：构造传话内容
+        val contentResp = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
+        if (!ResChecker.checkRes(TAG, contentResp)) return
+
+        // 稍作等待，防止风控
+        GlobalThreadPools.sleep(500)
+
+        // 第三步：发送传话内容
+        val sendResp = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
+        if (ResChecker.checkRes(TAG, sendResp)) {
+            Log.farm("家庭任务🏠道早安: $content 🌈")
+            Status.setFlagToday("antFarm::deliverMsgSend")
+        }
+    } catch (t: Throwable) {
+        Log.printStackTrace(TAG, "deliverMsgSend err:", t)
     }
+}
 
 
     /**
