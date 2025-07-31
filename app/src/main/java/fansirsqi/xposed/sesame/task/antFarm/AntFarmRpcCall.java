@@ -731,87 +731,105 @@ public class AntFarmRpcCall {
     }
      */
     
+    private static final String TAG = "AntFarmRpc";
     /**
-     * 测试道早安
+     * 发送家庭早安消息 (完整流程封装)
+     * @param friendUserIds 好友用户ID列表
+     * @param groupId 家庭群组ID
+     * @return 是否全部流程成功
      */
     public static boolean sendFamilyMorningGreeting(List<String> friendUserIds, String groupId) {
+        // 0. 参数校验
+        if (friendUserIds == null || friendUserIds.isEmpty() || StringUtil.isEmpty(groupId)) {
+            Log.farm(TAG, "参数校验失败: " + (friendUserIds == null ? "null" : friendUserIds.size()));
+            return false;
+        }
+
         try {
             // 1. 获取主题推荐
             JSONObject recommendRes = new JSONObject(deliverSubjectRecommend(friendUserIds));
-            if (!recommendRes.optBoolean("success")) {
-                Log.w(TAG, "早安主题推荐失败: " + recommendRes.optString("memo"));
-                return false;
-            }
-            String traceId = recommendRes.getString("ariverRpcTraceId");
-
+            if (!checkSuccess("主题推荐", recommendRes)) return false;
+            
             // 2. 生成早安内容
-            JSONObject contentRes = new JSONObject(deliverContentExpand(traceId, friendUserIds));
-            if (!contentRes.optBoolean("success")) {
-                Log.w(TAG, "早安内容生成失败");
-                return false;
-            }
-            String content = contentRes.getString("content");
-            String deliverId = contentRes.getString("deliverId");
-
+            JSONObject contentRes = new JSONObject(deliverContentExpand(
+                recommendRes.getString("ariverRpcTraceId"),
+                friendUserIds
+            ));
+            if (!checkSuccess("内容生成", contentRes)) return false;
+            
             // 3. 发送消息
             JSONObject sendRes = new JSONObject(deliverMsgSend(
-                deliverId, 
-                content,
+                contentRes.getString("deliverId"),
+                contentRes.getString("content"),
                 friendUserIds,
                 groupId
             ));
-            return sendRes.optBoolean("success");
+            return checkSuccess("消息发送", sendRes);
             
+        } catch (JSONException e) {
+            Log.printStackTrace(TAG, "JSON解析异常", e);
+            return false;
         } catch (Exception e) {
-            Log.printStackTrace(TAG, e);
+            Log.printStackTrace(TAG, "未知异常", e);
             return false;
         }
     }
 
-    // 早安主题推荐
-    private static String deliverSubjectRecommend(List<String> friendUserIds) {
+    // 统一响应检查
+    private static boolean checkSuccess(String step, JSONObject res) {
+        if (!res.optBoolean("success")) {
+            Log.farm(TAG, step + "失败 - code:" + res.optString("resultCode") 
+                + " memo:" + res.optString("memo"));
+            return false;
+        }
+        return true;
+    }
+
+    // 早安主题推荐 (参数严格匹配支付宝文档)
+    private static String deliverSubjectRecommend(List<String> friendUserIds) throws JSONException {
         JSONObject params = new JSONObject();
         params.put("operationType", "com.alipay.antfarm.deliverSubjectRecommend");
         
         JSONObject requestData = new JSONObject();
         requestData.put("friendUserIds", new JSONArray(friendUserIds));
         requestData.put("requestType", "NORMAL");
-        requestData.put("sceneCode", "ChickFamily");
+        requestData.put("sceneCode", "ChickFamily"); // 注意大小写
         requestData.put("source", "H5");
         
         params.put("requestData", new JSONArray().put(requestData));
         return RpcUtil.request("com.alipay.antfarm.deliverSubjectRecommend", params);
     }
 
-    // 生成早安内容
-    private static String deliverContentExpand(String traceId, List<String> friendUserIds) {
+    // 生成早安内容 (补充必要参数)
+    private static String deliverContentExpand(String traceId, List<String> friendUserIds) throws JSONException {
         JSONObject params = new JSONObject();
         params.put("operationType", "com.alipay.antfarm.DeliverContentExpand");
         
         JSONObject requestData = new JSONObject();
         requestData.put("ariverRpcTraceId", traceId);
+        requestData.put("eventId", "event-deliver-familygoodmorning"); // 必须参数
         requestData.put("friendUserIds", new JSONArray(friendUserIds));
-        requestData.put("sceneCode", "ANTFARM");
+        requestData.put("sceneCode", "ANTFARM"); // 注意与主题推荐不同
         requestData.put("source", "H5");
         
         params.put("requestData", new JSONArray().put(requestData));
         return RpcUtil.request("com.alipay.antfarm.DeliverContentExpand", params);
     }
 
-    // 发送消息
+    // 发送消息 (修正参数名deliverId)
     private static String deliverMsgSend(String deliverId, String content, 
-                                      List<String> friendUserIds, String groupId) {
+                                      List<String> friendUserIds, String groupId) throws JSONException {
         JSONObject params = new JSONObject();
         params.put("operationType", "com.alipay.antfarm.DeliverMsgSend");
         
         JSONObject requestData = new JSONObject();
         requestData.put("content", content);
-        requestData.put("deliverId", deliverId);
+        requestData.put("deliverId", deliverId); // 注意官方文档拼写
         requestData.put("friendUserIds", new JSONArray(friendUserIds));
         requestData.put("groupId", groupId);
         requestData.put("mode", "AI");
         requestData.put("sceneCode", "ANTFARM");
-        requestData.put("spaceType", "ChickFamily");
+        requestData.put("spaceType", "ChickFamily"); // 必须参数
         
         params.put("requestData", new JSONArray().put(requestData));
         return RpcUtil.request("com.alipay.antfarm.DeliverMsgSend", params);
