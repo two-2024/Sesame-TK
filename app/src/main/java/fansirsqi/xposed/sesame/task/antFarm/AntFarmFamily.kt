@@ -322,9 +322,10 @@ fun deliverMsgSend(familyUserIds: MutableList<String>) {
         familyUserIds.forEach { userIds.put(it) }
 
         // 获取推荐传话主题
-        val subjectResp = JSONObject(
-            AntFarmRpcCall.deliverSubjectRecommend(friendUserIds = userIds)
-        )
+val subjectResp = JSONObject(
+    AntFarmRpcCall.deliverSubjectRecommend(userIds) // ✅ 修复：去掉命名参数
+)
+
         if (!ResChecker.checkRes(TAG, subjectResp)) return
 
         val traceId = subjectResp.optString("ariverRpcTraceId")
