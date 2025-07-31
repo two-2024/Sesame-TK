@@ -679,11 +679,6 @@ public class AntFarmRpcCall {
         return RequestManager.requestString("com.alipay.antfarm.sendChat",
                 "[{\"chatCardType\":\"" + chatCardType + "\",\"receiverUserId\":\"" + receiverUserId + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]");
     }
-
-    public static String deliverSubjectRecommend(JSONArray friendUserIdList) {
-        String args = "[{\"friendUserIds\":" + friendUserIdList + ",\"requestType\":\"NORMAL\",\"sceneCode\":\"ChickFamily\",\"source\":\"H5\"}]";
-        return RequestManager.requestString("com.alipay.antfarm.deliverSubjectRecommend", args);
-    }
     
     public static String deliverSubjectRecommend(JSONArray friendUserIds) throws JSONException {
         JSONObject args = new JSONObject();
