@@ -556,7 +556,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 DataCache.INSTANCE.load();
                 updateDay(userId);
                 FriendWatch.load(userId);
-                String successMsg = "芝麻粒-TK 加载成功✨记得吃饭🍚";
+                String successMsg = "芝麻粒-TK 加载成功✨好好吃饭🍚";
                 Log.record(successMsg);
                 Toast.show(successMsg);
             }
