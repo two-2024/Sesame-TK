@@ -680,12 +680,12 @@ public class AntFarmRpcCall {
                 "[{\"chatCardType\":\"" + chatCardType + "\",\"receiverUserId\":\"" + receiverUserId + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]");
     }
     
-        /**
+      /**
      * 家庭任务提示接口（familyTaskTips）
+     * @return 接口返回的完整JSON字符串
      */
     public static String familyTaskTips() {
         try {
-            // 请求参数示例，可以根据实际接口调整
             String body = "{\"operationType\":\"com.alipay.antfarm.familyTaskTips\",\"requestData\":[{\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"taskSceneCode\":\"ANTFARM_FAMILY_TASK\",\"timeZoneId\":\"Asia/Shanghai\"}]}";
             return HttpUtil.post("/com.alipay.antfarm.familyTaskTips", body);
         } catch (Throwable t) {
@@ -697,6 +697,7 @@ public class AntFarmRpcCall {
     /**
      * 推荐“道早安”主题（deliverSubjectRecommend）
      * @param userIds JSONArray的用户ID列表
+     * @return 接口返回的完整JSON字符串
      */
     public static String deliverSubjectRecommend(JSONArray userIds) {
         try {
@@ -712,6 +713,7 @@ public class AntFarmRpcCall {
      * 生成问候语内容（DeliverContentExpand）
      * @param userIds JSONArray的用户ID列表
      * @param traceId 推荐主题接口返回的traceId
+     * @return 接口返回的完整JSON字符串
      */
     public static String deliverContentExpand(JSONArray userIds, String traceId) {
         try {
@@ -726,6 +728,7 @@ public class AntFarmRpcCall {
     /**
      * 再次确认内容（QueryExpandContent）
      * @param deliverId 传话内容ID
+     * @return 接口返回的完整JSON字符串
      */
     public static String queryExpandContent(String deliverId) {
         try {
@@ -743,6 +746,7 @@ public class AntFarmRpcCall {
      * @param userIds JSONArray的用户ID列表
      * @param content 消息内容
      * @param deliverId 消息ID
+     * @return 接口返回的完整JSON字符串
      */
     public static String deliverMsgSend(String groupId, JSONArray userIds, String content, String deliverId) {
         try {
@@ -758,6 +762,7 @@ public class AntFarmRpcCall {
      * 同步家庭状态（syncFamilyStatus）
      * @param groupId 家庭组ID
      * @param userIds JSONArray的用户ID列表
+     * @return 接口返回的完整JSON字符串
      */
     public static String syncFamilyStatus(String groupId, JSONArray userIds) {
         try {
@@ -768,7 +773,6 @@ public class AntFarmRpcCall {
             return "{}";
         }
     }
-
         
     public static String syncFamilyStatus(String groupId, String operType, String syncUserIds) {
         String args = "[{\"groupId\":\"" + groupId + "\",\"operType\":\"" + operType + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"syncUserIds\":[\"" + syncUserIds + "\"]}]";
