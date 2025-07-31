@@ -14,43 +14,28 @@ import fansirsqi.xposed.sesame.util.maps.UserMap
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Calendar
-import java.util.Objects
 import kotlin.math.abs
-
 
 data object AntFarmFamily {
     private const val TAG = "小鸡家庭"
 
-    /**
-     * 家庭ID
-     */
+    /** 家庭ID */
     private var groupId: String = ""
 
-    /**
-     * 家庭名称
-     */
+    /** 家庭名称 */
     private var groupName: String = ""
 
-    /**
-     * 家庭成员对象
-     */
+    /** 家庭成员对象 */
     private var familyAnimals: JSONArray = JSONArray()
 
-    /**
-     * 家庭成员列表
-     */
+    /** 家庭成员列表 */
     private var familyUserIds: MutableList<String> = mutableListOf()
 
-    /**
-     * 互动功能列表
-     */
+    /** 互动功能列表 */
     private var familyInteractActions: JSONArray = JSONArray()
 
-    /**
-     * 美食配置对象
-     */
+    /** 美食配置对象 */
     private var eatTogetherConfig: JSONObject = JSONObject()
-
 
     fun run(familyOptions: SelectModelField, notInviteList: SelectModelField) {
         try {
@@ -60,71 +45,65 @@ data object AntFarmFamily {
         }
     }
 
-    /**
-     * 进入家庭
-     */
+    /** 进入家庭并执行任务 */
     fun enterFamily(familyOptions: SelectModelField, notInviteList: SelectModelField) {
         try {
-            var enterRes = JSONObject(AntFarmRpcCall.enterFamily());
-            if (ResChecker.checkRes(TAG, enterRes)) {
-                groupId = enterRes.getString("groupId")
-                groupName = enterRes.getString("groupName")
-                var familyAwardNum: Int = enterRes.optInt("familyAwardNum", 0)//奖励数量
-                var familySignTips: Boolean = enterRes.optBoolean("familySignTips", false)//签到
-                var assignFamilyMemberInfo: JSONObject? = enterRes.optJSONObject("assignFamilyMemberInfo")//分配成员信息-顶梁柱
-                familyAnimals = enterRes.getJSONArray("animals")//家庭动物列表
-                familyUserIds = (0..<familyAnimals.length())
-                    .map { familyAnimals.getJSONObject(it).getString("userId") }
-                    .toMutableList()
-                familyInteractActions = enterRes.getJSONArray("familyInteractActions")//互动功能列表
-                eatTogetherConfig = enterRes.getJSONObject("eatTogetherConfig")//美食配置对象
+            val enterRes = JSONObject(AntFarmRpcCall.enterFamily())
+            if (!ResChecker.checkRes(TAG, enterRes)) return
 
+            groupId = enterRes.optString("groupId")
+            groupName = enterRes.optString("groupName")
+            val familyAwardNum = enterRes.optInt("familyAwardNum", 0)
+            val familySignTips = enterRes.optBoolean("familySignTips", false)
+            val assignFamilyMemberInfo = enterRes.optJSONObject("assignFamilyMemberInfo")
+            familyAnimals = enterRes.optJSONArray("animals") ?: JSONArray()
+            familyUserIds = (0 until familyAnimals.length())
+                .map { familyAnimals.getJSONObject(it).getString("userId") }
+                .toMutableList()
+            familyInteractActions = enterRes.optJSONArray("familyInteractActions") ?: JSONArray()
+            eatTogetherConfig = enterRes.optJSONObject("eatTogetherConfig") ?: JSONObject()
 
-                if (familyOptions.value.contains("familySign") && familySignTips) {
-                    familySign()
-                }
+            // 一、签到相关任务
+            if (familyOptions.value.contains("familySign") && familySignTips) {
+                familySign()
+            }
 
-                if (assignFamilyMemberInfo != null
-                    && familyOptions.value.contains("assignRights")
-                    && assignFamilyMemberInfo.getJSONObject("assignRights").getString("status") != "USED"
-                ) {
-                    if (assignFamilyMemberInfo.getJSONObject("assignRights").getString("assignRightsOwner") == UserMap.currentUid) {
-                        assignFamilyMember(assignFamilyMemberInfo, familyUserIds)
-                    } else {
-                        Log.record("家庭任务🏡[使用顶梁柱特权] 不是家里的顶梁柱！")
-                        familyOptions.value.remove("assignRights")
-                    }
-                }
-
-                if (familyOptions.value.contains("familyClaimReward") && familyAwardNum > 0) {
-                    familyClaimRewardList()
-                }
-
-                if (familyOptions.value.contains("feedFamilyAnimal")) {
-                    familyFeedFriendAnimal(familyAnimals)
-                }
-
-                if (familyOptions.value.contains("eatTogetherConfig")) {
-                    familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds)
-                }
-
-                if (familyOptions.value.contains("deliverMsgSend")) {
-                    deliverMsgSend(familyUserIds)
-                }
-
-                if (familyOptions.value.contains("shareToFriends")) {
-                    familyShareToFriends(familyUserIds, notInviteList)
+            if (assignFamilyMemberInfo != null
+                && familyOptions.value.contains("assignRights")
+                && assignFamilyMemberInfo.optJSONObject("assignRights")?.optString("status") != "USED"
+            ) {
+                if (assignFamilyMemberInfo.optJSONObject("assignRights")?.optString("assignRightsOwner") == UserMap.currentUid) {
+                    assignFamilyMember(assignFamilyMemberInfo, familyUserIds)
+                } else {
+                    Log.record("家庭任务🏡[使用顶梁柱特权] 不是家里的顶梁柱！")
+                    familyOptions.value.remove("assignRights")
                 }
             }
+
+            if (familyOptions.value.contains("familyClaimReward") && familyAwardNum > 0) {
+                familyClaimRewardList()
+            }
+
+            // 二、互动类任务
+            if (familyOptions.value.contains("feedFamilyAnimal")) {
+                familyFeedFriendAnimal(familyAnimals)
+            }
+            if (familyOptions.value.contains("eatTogetherConfig")) {
+                familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds)
+            }
+            if (familyOptions.value.contains("deliverMsgSend")) {
+                deliverMsgSend(familyUserIds)
+            }
+            if (familyOptions.value.contains("shareToFriends")) {
+                familyShareToFriends(familyUserIds, notInviteList)
+            }
+
         } catch (e: Exception) {
             Log.printStackTrace(TAG, e.message, e)
         }
     }
 
-
-    /**
-     * 家庭签到
-     */
+    /** 家庭签到 */
     fun familySign() {
         try {
             if (Status.hasFlagToday("farmfamily::dailySign")) return
@@ -137,30 +116,27 @@ data object AntFarmFamily {
         }
     }
 
-    /**
-     * 领取家庭奖励
-     */
+    /** 领取家庭奖励 */
     fun familyClaimRewardList() {
         try {
-            var jo = JSONObject(AntFarmRpcCall.familyAwardList())
-            if (ResChecker.checkRes(TAG, jo)) {
-                val ja = jo.getJSONArray("familyAwardRecordList")
-                for (i in 0..<ja.length()) {
-                    jo = ja.getJSONObject(i)
-                    if (jo.optBoolean("expired")
-                        || jo.optBoolean("received", true)
-                        || jo.has("linkUrl")
-                        || (jo.has("operability") && !jo.getBoolean("operability"))
-                    ) {
-                        continue
-                    }
-                    val rightId = jo.getString("rightId")
-                    val awardName = jo.getString("awardName")
-                    val count = jo.optInt("count", 1)
-                    var receveRes = JSONObject(AntFarmRpcCall.receiveFamilyAward(rightId))
-                    if (ResChecker.checkRes(TAG, receveRes)) {
-                        Log.farm("家庭奖励🏆: $awardName x $count")
-                    }
+            val jo = JSONObject(AntFarmRpcCall.familyAwardList())
+            if (!ResChecker.checkRes(TAG, jo)) return
+
+            val ja = jo.optJSONArray("familyAwardRecordList") ?: return
+            for (i in 0 until ja.length()) {
+                val award = ja.getJSONObject(i)
+                if (award.optBoolean("expired")
+                    || award.optBoolean("received", true)
+                    || award.has("linkUrl")
+                    || (award.has("operability") && !award.getBoolean("operability"))
+                ) continue
+
+                val rightId = award.optString("rightId")
+                val awardName = award.optString("awardName")
+                val count = award.optInt("count", 1)
+                val receiveRes = JSONObject(AntFarmRpcCall.receiveFamilyAward(rightId))
+                if (ResChecker.checkRes(TAG, receiveRes)) {
+                    Log.farm("家庭奖励🏆: $awardName x $count")
                 }
             }
         } catch (t: Throwable) {
@@ -168,56 +144,50 @@ data object AntFarmFamily {
         }
     }
 
-    /**
-     * 顶梁柱
-     */
+    /** 使用顶梁柱特权 */
     fun assignFamilyMember(jsonObject: JSONObject, userIds: MutableList<String>) {
         try {
             userIds.remove(UserMap.currentUid)
-            //随机选一个家庭成员
-            if (userIds.isEmpty()) {
-                return
-            }
-            val beAssignUser = userIds[RandomUtil.nextInt(0, userIds.size - 1)]
-            //随机获取一个任务类型
-            val assignConfigList = jsonObject.getJSONArray("assignConfigList")
+            if (userIds.isEmpty()) return
+
+            val beAssignUser = userIds.random()
+            val assignConfigList = jsonObject.optJSONArray("assignConfigList") ?: JSONArray()
+            if (assignConfigList.length() == 0) return
+
             val assignConfig = assignConfigList.getJSONObject(RandomUtil.nextInt(0, assignConfigList.length() - 1))
-            var jo = JSONObject(AntFarmRpcCall.assignFamilyMember(assignConfig.getString("assignAction"), beAssignUser))
+            val jo = JSONObject(AntFarmRpcCall.assignFamilyMember(assignConfig.optString("assignAction"), beAssignUser))
             if (ResChecker.checkRes(TAG, jo)) {
-                Log.farm("家庭任务🏡[使用顶梁柱特权] ${assignConfig.getString("assignDesc")}")
-//                val sendRes = JSONObject(AntFarmRpcCall.sendChat(assignConfig.getString("chatCardType"), beAssignUser))
+                Log.farm("家庭任务🏡[使用顶梁柱特权] ${assignConfig.optString("assignDesc")}")
             }
         } catch (t: Throwable) {
             Log.printStackTrace(TAG, t)
         }
     }
 
-
-    /**
-     * 帮好友喂小鸡
-     * @param animals 家庭动物列表
-     */
+    /** 帮好友喂小鸡 */
     fun familyFeedFriendAnimal(animals: JSONArray) {
         try {
-            for (i in 0..<animals.length()) {
+            for (i in 0 until animals.length()) {
                 val animal = animals.getJSONObject(i)
-                val animalStatusVo = animal.getJSONObject("animalStatusVO")
-                if (AnimalInteractStatus.HOME.name == animalStatusVo.getString("animalInteractStatus") && AnimalFeedStatus.HUNGRY.name == animalStatusVo.getString("animalFeedStatus")) {
-                    val groupId = animal.getString("groupId")
-                    val farmId = animal.getString("farmId")
-                    val userId = animal.getString("userId")
-                    if (UserMap.getUserIdSet().contains(userId)) {
-                        if (Status.hasFlagToday("farm::feedFriendLimit")) {
-                            Log.runtime("今日喂鸡次数已达上限🥣 家庭喂")
-                            return
-                        }
-                        val jo = JSONObject(AntFarmRpcCall.feedFriendAnimal(farmId, groupId))
-                        if (ResChecker.checkRes(TAG, jo)) {
-                            Log.farm("家庭任务🏠帮喂好友🥣[" + UserMap.getMaskName(userId) + "]的小鸡180g #剩余" + jo.getInt("foodStock") + "g")
-                        }
-                    } else {
+                val animalStatusVo = animal.optJSONObject("animalStatusVO") ?: continue
+                val interactStatus = animalStatusVo.optString("animalInteractStatus")
+                val feedStatus = animalStatusVo.optString("animalFeedStatus")
+                if (interactStatus == AnimalInteractStatus.HOME.name && feedStatus == AnimalFeedStatus.HUNGRY.name) {
+                    val groupId = animal.optString("groupId")
+                    val farmId = animal.optString("farmId")
+                    val userId = animal.optString("userId")
+
+                    if (!UserMap.getUserIdSet().contains(userId)) {
                         Log.error(TAG, "$userId 不是你的好友！ 跳过家庭喂食")
                         continue
+                    }
+                    if (Status.hasFlagToday("farm::feedFriendLimit")) {
+                        Log.runtime("今日喂鸡次数已达上限🥣 家庭喂")
+                        return
+                    }
+                    val jo = JSONObject(AntFarmRpcCall.feedFriendAnimal(farmId, groupId))
+                    if (ResChecker.checkRes(TAG, jo)) {
+                        Log.farm("家庭任务🏠帮喂好友🥣[${UserMap.getMaskName(userId)}]的小鸡180g #剩余${jo.optInt("foodStock")}g")
                     }
                 }
             }
@@ -227,46 +197,38 @@ data object AntFarmFamily {
         }
     }
 
-
-    /**
-     * 请客吃美食
-     * @param eatTogetherConfig 美食配置对象
-     * @param familyInteractActions 互动功能列表
-     * @param familyUserIds 家庭成员列表
-     */
+    /** 请客吃美食 */
     private fun familyEatTogether(eatTogetherConfig: JSONObject, familyInteractActions: JSONArray, familyUserIds: MutableList<String>) {
         try {
-            var isEat = false
-            val periodItemList = eatTogetherConfig.optJSONArray("periodItemList")
-            if (periodItemList == null || periodItemList.length() == 0) {
+            val periodItemList = eatTogetherConfig.optJSONArray("periodItemList") ?: JSONArray()
+            if (periodItemList.length() == 0) {
                 Log.error(TAG, "美食不足,无法请客,请检查小鸡厨房")
                 return
             }
-            if (familyInteractActions.length() > 0) {
-                for (i in 0..<familyInteractActions.length()) {
-                    val familyInteractAction = familyInteractActions.getJSONObject(i)
-                    if ("EatTogether" == familyInteractAction.optString("familyInteractType")) {
-                        val endTime = familyInteractAction.optLong("interactEndTime", 0)
-                        val gaptime = endTime - System.currentTimeMillis()
-                        Log.record("正在吃..${formatDuration(gaptime)} 吃完")
-                        return
-                    }
+            // 判断是否正在吃饭
+            for (i in 0 until familyInteractActions.length()) {
+                val familyInteractAction = familyInteractActions.getJSONObject(i)
+                if (familyInteractAction.optString("familyInteractType") == "EatTogether") {
+                    val endTime = familyInteractAction.optLong("interactEndTime", 0)
+                    val gapTime = endTime - System.currentTimeMillis()
+                    Log.record("正在吃..${formatDuration(gapTime)} 吃完")
+                    return
                 }
             }
-            var periodName = ""
+            // 检查当前时间是否在美食时间段
             val currentTime = Calendar.getInstance()
-            for (i in 0..<periodItemList.length()) {
+            var periodName = ""
+            var isEat = false
+            for (i in 0 until periodItemList.length()) {
                 val periodItem = periodItemList.getJSONObject(i)
-                val startHour = periodItem.optInt("startHour")
-                val startMinute = periodItem.optInt("startMinute")
-                val endHour = periodItem.optInt("endHour")
-                val endMinute = periodItem.optInt("endMinute")
-                val startTime = Calendar.getInstance()
-                startTime.set(Calendar.HOUR_OF_DAY, startHour)
-                startTime.set(Calendar.MINUTE, startMinute)
-                val endTime = Calendar.getInstance()
-                endTime.set(Calendar.HOUR_OF_DAY, endHour)
-                endTime.set(Calendar.MINUTE, endMinute)
+                val startTime = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, periodItem.optInt("startHour"))
+                    set(Calendar.MINUTE, periodItem.optInt("startMinute"))
+                }
+                val endTime = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, periodItem.optInt("endHour"))
+                    set(Calendar.MINUTE, periodItem.optInt("endMinute"))
+                }
                 if (currentTime.after(startTime) && currentTime.before(endTime)) {
                     periodName = periodItem.optString("periodName")
                     isEat = true
@@ -277,18 +239,18 @@ data object AntFarmFamily {
                 Log.record("家庭任务🏠请客吃美食#当前时间不在美食时间段")
                 return
             }
-            if (Objects.isNull(familyUserIds) || familyUserIds.isEmpty()) {
+            if (familyUserIds.isEmpty()) {
                 Log.record("家庭成员列表为空,无法请客")
                 return
             }
-            val array: JSONArray? = queryRecentFarmFood(familyUserIds.size)
-            if (array == null) {
+            val recentFoods = queryRecentFarmFood(familyUserIds.size)
+            if (recentFoods == null) {
                 Log.record("查询最近的几份美食为空,无法请客")
                 return
             }
-            val jo = JSONObject(AntFarmRpcCall.familyEatTogether(groupId, familyUserIds.toJSONArray(), array))
+            val jo = JSONObject(AntFarmRpcCall.familyEatTogether(groupId, familyUserIds.toJSONArray(), recentFoods))
             if (ResChecker.checkRes(TAG, jo)) {
-                Log.farm("家庭任务🏠请客" + periodName + "#消耗美食" + familyUserIds.size + "份")
+                Log.farm("家庭任务🏠请客$periodName#消耗美食${familyUserIds.size}份")
             }
         } catch (t: Throwable) {
             Log.runtime(TAG, "familyEatTogether err:")
@@ -296,124 +258,102 @@ data object AntFarmFamily {
         }
     }
 
-    /**
-     * 查询最近的几份美食
-     * @param queryNum 查询数量
-     */
+    /** 查询最近的几份美食 */
     fun queryRecentFarmFood(queryNum: Int): JSONArray? {
         try {
             val jo = JSONObject(AntFarmRpcCall.queryRecentFarmFood(queryNum))
-            if (!ResChecker.checkRes(TAG, jo)) {
-                return null
-            }
-            val cuisines = jo.getJSONArray("cuisines")
+            if (!ResChecker.checkRes(TAG, jo)) return null
+
+            val cuisines = jo.optJSONArray("cuisines") ?: return null
             var count = 0
-            for (i in 0..<cuisines.length()) {
+            for (i in 0 until cuisines.length()) {
                 val cuisine = cuisines.getJSONObject(i)
-                count += cuisine.optInt("count")
+                count += cuisine.optInt("count", 0)
             }
-            if (cuisines != null && queryNum <= count) {
-                return cuisines
-            }
+            return if (count >= queryNum) cuisines else null
         } catch (t: Throwable) {
             Log.printStackTrace(TAG, "queryRecentFarmFood err:", t)
         }
         return null
     }
 
-
-   /**
- * 家庭任务：发送道早安（AI传话）
- * @param familyUserIds 家庭成员列表（包含当前用户会自动剔除）
- */
-fun deliverMsgSend(familyUserIds: MutableList<String>) {
-    try {
-        // 时间窗口检查（6:00 - 10:00）
-        val now = Calendar.getInstance()
-        val startTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 6)
-            set(Calendar.MINUTE, 0)
-        }
-        val endTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 10)
-            set(Calendar.MINUTE, 0)
-        }
-        if (now.before(startTime) || now.after(endTime)) return
-
-        // 群组 ID 校验
-        val groupId = UserMap.groupId ?: return
-
-        // 移除当前用户自己（否则接口报错）
-        familyUserIds.remove(UserMap.currentUid)
-        if (familyUserIds.isEmpty()) return
-
-        // 当天只发送一次
-        if (Status.hasFlagToday("antFarm::deliverMsgSend")) return
-
-        // 构造 userIds JSONArray
-        val userIds = JSONArray().apply {
-            familyUserIds.forEach { put(it) }
-        }
-
-        // 第一步：推荐传话主题
-        val subjectResp = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
-        if (!ResChecker.checkRes(TAG, subjectResp)) return
-
-        val ariverRpcTraceId = subjectResp.optString("ariverRpcTraceId")
-        val content = subjectResp.optString("content")
-        val deliverId = subjectResp.optString("deliverId")
-
-        // 第二步：构造传话内容
-        val contentResp = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
-        if (!ResChecker.checkRes(TAG, contentResp)) return
-
-        // 稍作等待，防止风控
-        GlobalThreadPools.sleep(500)
-
-        // 第三步：发送传话内容
-        val sendResp = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
-        if (ResChecker.checkRes(TAG, sendResp)) {
-            Log.farm("家庭任务🏠道早安: $content 🌈")
-            Status.setFlagToday("antFarm::deliverMsgSend")
-        }
-    } catch (t: Throwable) {
-        Log.printStackTrace(TAG, "deliverMsgSend err:", t)
-    }
-}
-
-
     /**
-     * 好友分享家庭
-     * @param familyUserIds 好友列表
-     * @param notInviteList 不邀请列表
+     * 发送道早安（AI传话）
+     * @param familyUserIds 家庭成员列表（包含当前用户会自动剔除）
      */
+    fun deliverMsgSend(familyUserIds: MutableList<String>) {
+        try {
+            // 时间窗口检查（6:00 - 10:00）
+            val now = Calendar.getInstance()
+            val startTime = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 6)
+                set(Calendar.MINUTE, 0)
+            }
+            val endTime = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 10)
+                set(Calendar.MINUTE, 0)
+            }
+            if (now.before(startTime) || now.after(endTime)) return
+
+            if (groupId.isEmpty()) return
+
+            // 移除当前用户自己（否则接口报错）
+            familyUserIds.remove(UserMap.currentUid)
+            if (familyUserIds.isEmpty()) return
+
+            // 当天只发送一次
+            if (Status.hasFlagToday("antFarm::deliverMsgSend")) return
+
+            val userIds = JSONArray()
+            familyUserIds.forEach { userIds.put(it) }
+
+            // 推荐传话主题
+            val subjectResp = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
+            if (!ResChecker.checkRes(TAG, subjectResp)) return
+
+            val ariverRpcTraceId = subjectResp.optString("ariverRpcTraceId")
+            val content = subjectResp.optString("content")
+            val deliverId = subjectResp.optString("deliverId")
+
+            // 构造传话内容
+            val contentResp = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
+            if (!ResChecker.checkRes(TAG, contentResp)) return
+
+            // 防止风控，稍作等待
+            GlobalThreadPools.sleep(500)
+
+            // 发送传话消息
+            val sendResp = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
+            if (ResChecker.checkRes(TAG, sendResp)) {
+                Log.farm("家庭任务🏠道早安: $content 🌈")
+                Status.setFlagToday("antFarm::deliverMsgSend")
+            }
+        } catch (t: Throwable) {
+            Log.printStackTrace(TAG, "deliverMsgSend err:", t)
+        }
+    }
+
+    /** 好友分享家庭 */
     private fun familyShareToFriends(familyUserIds: MutableList<String>, notInviteList: SelectModelField) {
         try {
-            if (Status.hasFlagToday("antFarm::familyShareToFriends")) {
-                return
-            }
+            if (Status.hasFlagToday("antFarm::familyShareToFriends")) return
 
             val familyValue: MutableSet<String?> = notInviteList.value
             val allUser: List<AlipayUser> = AlipayUser.getList()
-
             if (allUser.isEmpty()) {
                 Log.error(TAG, "allUser is empty")
                 return
             }
 
-            // 打乱顺序，实现随机选取
             val shuffledUsers = allUser.shuffled()
-
             val inviteList = JSONArray()
+
             for (u in shuffledUsers) {
                 if (!familyUserIds.contains(u.id) && !familyValue.contains(u.id)) {
                     inviteList.put(u.id)
-                    if (inviteList.length() >= 6) {
-                        break
-                    }
+                    if (inviteList.length() >= 6) break
                 }
             }
-
             if (inviteList.length() == 0) {
                 Log.error(TAG, "没有符合分享条件的好友")
                 return
@@ -431,12 +371,7 @@ fun deliverMsgSend(familyUserIds: MutableList<String>) {
         }
     }
 
-
-    /**
-     * 通用时间差格式化（自动区分过去/未来）
-     * @param diffMillis 任意时间戳（毫秒）
-     * @return 易读字符串，如 "刚刚", "5分钟后", "3天前"
-     */
+    /** 时间差格式化 */
     fun formatDuration(diffMillis: Long): String {
         val absSeconds = abs(diffMillis) / 1000
 
@@ -455,6 +390,4 @@ fun deliverMsgSend(familyUserIds: MutableList<String>) {
             else -> "$value$unit 前"
         }
     }
-
-
 }
