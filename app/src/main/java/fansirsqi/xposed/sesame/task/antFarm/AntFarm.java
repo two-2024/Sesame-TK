@@ -208,6 +208,10 @@ public class AntFarm extends ModelTask {
     private StringModelField giftFamilyDrawFragment;
     private BooleanModelField paradiseCoinExchangeBenefit;
     private SelectModelField paradiseCoinExchangeBenefitList;
+    // 家庭早安功能
+    private BooleanModelField familyMorningGreeting;
+    private ChoiceModelField morningGreetingType; // 问候语类型
+    private StringModelField customMorningMessage; // 自定义问候语
 
     @Override
     public ModelFields getFields() {
@@ -2747,6 +2751,7 @@ public class AntFarm extends ModelTask {
             //扭蛋
             JSONObject familyDrawInfo = jo.getJSONObject("familyDrawInfo");
             JSONArray familyInteractActions = jo.getJSONArray("familyInteractActions");
+            // 收集家庭成员ID
             JSONArray animals = jo.getJSONArray("animals");
             List<String> familyUserIds = new ArrayList<>();
 
@@ -2770,8 +2775,8 @@ public class AntFarm extends ModelTask {
                 familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds);
             }
             //道早安
-            if (familyOptions.getValue().contains("deliverMsgSend")) {
-                AntFarmFamily.deliverMsgSend(familyUserIds);
+            if (familyOptions.getValue().contains("sendMorningMsg")) {
+            sendFamilyMorningGreeting(familyUserIds);
             }
             //好友分享
             if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
@@ -2787,6 +2792,56 @@ public class AntFarm extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+    
+    //道早安
+    private void sendFamilyMorningGreeting(List<String> userIds) {
+    try {
+        // 1. 检查时间有效性
+        if (!isValidMorningTime()) {
+            Log.i(TAG, "当前不在早安发送时间段内");
+            return;
+        }
+        
+        // 2. 获取早安内容
+        String content = generateMorningContent();
+        
+        // 3. 调用RPC发送
+        JSONObject res = new JSONObject(AntFarmRpcCall.deliverMsgSend(
+            content,
+            userIds,
+            familyGroupId
+        ));
+        
+        if (res.optBoolean("success")) {
+            Log.i(TAG, "早安发送成功！接收人：" + userIds.size() + "位");
+        } else {
+            Log.w(TAG, "发送失败：" + res.optString("memo"));
+        }
+    } catch (Exception e) {
+        Log.printStackTrace(TAG, e);
+    }
+}
+
+private String generateMorningContent() {
+    // 这里可以扩展多种问候语模板
+    String[] templates = {
+        "晨光熹微，早安！愿您今天收获满满~",
+        "新的一天开始啦，记得给自己一个微笑哦！",
+        "早安！您的小鸡已经精神抖擞准备出发啦~"
+    };
+    return templates[new Random().nextInt(templates.length)];
+}
+
+private boolean isValidMorningTime() {
+    // 实现时间段检查逻辑（如0600-1000）
+    Calendar cal = Calendar.getInstance();
+    int hour = cal.get(Calendar.HOUR_OF_DAY);
+    int minute = cal.get(Calendar.MINUTE);
+    int current = hour * 100 + minute;
+    
+    // 默认时间段06:00-10:00
+    return current >= 600 && current <= 1000; 
+}
 
 
     private void syncFamilyStatusIntimacy(String groupId) {
@@ -3126,7 +3181,8 @@ public class AntFarm extends ModelTask {
             list.add(new AntFarmFamilyOption("eatTogetherConfig", "请吃美食"));
             //貌似帮喂拼写错误
             list.add(new AntFarmFamilyOption("feedFriendAnimal", "帮喂小鸡"));
-            list.add(new AntFarmFamilyOption("deliverMsgSend", "道早安"));
+            //原来是deliverMsgSend
+            list.add(new AntFarmFamilyOption("sendMorningMsg", "道早安"));
             list.add(new AntFarmFamilyOption("familyClaimReward", "领取奖励"));
             list.add(new AntFarmFamilyOption("inviteFriendVisitFamily", "好友分享"));
             list.add(new AntFarmFamilyOption("assignRights", "使用顶梁柱特权"));
