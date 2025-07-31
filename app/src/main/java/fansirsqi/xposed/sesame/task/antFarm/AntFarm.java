@@ -2770,13 +2770,11 @@ public class AntFarm extends ModelTask {
             if (familyOptions.getValue().contains("eatTogetherConfig")) {
                 familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds);
             }
-        
-        // 优化后的早安功能
-        if (familyOptions.getValue().contains("deliverMsgSend")) {
-            inviteFriendVisitFamily(familyUserIds);
-        }
-        
-        //好友分享
+           // 道早安
+           if (familyOptions.getValue().contains("deliverMsgSend")) {
+                AntFarmFamily.INSTANCE.sendGoodMorning(familyUserIds);
+           }
+           //好友分享
             if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
                 inviteFriendVisitFamily(familyUserIds);
             }
