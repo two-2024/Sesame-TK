@@ -2735,117 +2735,95 @@ public class AntFarm extends ModelTask {
     }
 
     public void family() {
-        if (StringUtil.isEmpty(familyGroupId)) {
-            return;
-        }
-        try {
-            JSONObject jo = new JSONObject(AntFarmRpcCall.enterFamily());
-            if (!ResChecker.checkRes(TAG, jo)) return;
-            familyGroupId = jo.getString("groupId");
-            int familyAwardNum = jo.getInt("familyAwardNum");
-            boolean familySignTips = jo.getBoolean("familySignTips");
-            //顶梁柱
-            JSONObject assignFamilyMemberInfo = jo.getJSONObject("assignFamilyMemberInfo");
-            //美食配置
-            JSONObject eatTogetherConfig = jo.getJSONObject("eatTogetherConfig");
-            //扭蛋
-            JSONObject familyDrawInfo = jo.getJSONObject("familyDrawInfo");
-            JSONArray familyInteractActions = jo.getJSONArray("familyInteractActions");
-            // 收集家庭成员ID
-            JSONArray animals = jo.getJSONArray("animals");
-            List<String> familyUserIds = new ArrayList<>();
-
-            for (int i = 0; i < animals.length(); i++) {
-                jo = animals.getJSONObject(i);
-                String userId = jo.getString("userId");
-                familyUserIds.add(userId);
-            }
-            if (familySignTips && familyOptions.getValue().contains("familySign")) {
-                AntFarmFamily.INSTANCE.familySign();
-            }
-            if (familyAwardNum > 0 && familyOptions.getValue().contains("familyClaimReward")) {
-                AntFarmFamily.INSTANCE.familyClaimRewardList();
-            }
-            //帮喂成员
-            if (familyOptions.getValue().contains("feedFriendAnimal")) {
-                familyFeedFriendAnimal(animals);
-            }
-            //请吃美食
-            if (familyOptions.getValue().contains("eatTogetherConfig")) {
-                familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds);
-            }
-            //道早安
-            if (familyOptions.getValue().contains("sendMorningMsg")) {
-                sendFamilyMorningGreeting(familyUserIds);
-            }
-            //好友分享
-            if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
-                inviteFriendVisitFamily(familyUserIds);
-            }
-            boolean drawActivitySwitch = familyDrawInfo.getBoolean("drawActivitySwitch");
-            //扭蛋
-            if (drawActivitySwitch && familyOptions.getValue().contains("familyDrawInfo")) {
-                familyDrawTask(familyUserIds, familyDrawInfo);
-            }
-        } catch (Throwable t) {
-            Log.runtime(TAG, "family err:");
-            Log.printStackTrace(TAG, t);
-        }
+    if (StringUtil.isEmpty(familyGroupId)) {
+        return;
     }
-    
-    //道早安
-    private void handleMorningGreeting() {
     try {
-        // 1. 检查是否开启
-        if (!familyOptions.getValue().contains("deliverMsgSend")) return;
+        JSONObject jo = new JSONObject(AntFarmRpcCall.enterFamily());
+        if (!ResChecker.checkRes(TAG, jo)) return;
         
-        // 2. 时间控制 (06:00-10:00)
-        Calendar cal = Calendar.getInstance();
-        int hour = cal.get(Calendar.HOUR_OF_DAY);
-        if (hour < 6 || hour >= 10) {
-            Log.farm(TAG, "不在早安时段(06:00-10:00)，当前时间：" + hour + "时");
-            return;
-        }
+        // 基础信息获取
+        familyGroupId = jo.getString("groupId");
+        int familyAwardNum = jo.getInt("familyAwardNum");
+        boolean familySignTips = jo.getBoolean("familySignTips");
         
-        // 3. 获取家庭成员
-        JSONObject familyInfo = new JSONObject(AntFarmRpcCall.enterFamily());
-        if (!ResChecker.checkRes(TAG, familyInfo)) return;
+        // 组件初始化
+        JSONObject assignFamilyMemberInfo = jo.getJSONObject("assignFamilyMemberInfo");
+        JSONObject eatTogetherConfig = jo.getJSONObject("eatTogetherConfig");
+        JSONObject familyDrawInfo = jo.getJSONObject("familyDrawInfo");
+        JSONArray familyInteractActions = jo.getJSONArray("familyInteractActions");
         
-        JSONArray animals = familyInfo.getJSONArray("animals");
-        List<String> userIds = new ArrayList<>();
+        // 收集家庭成员
+        JSONArray animals = jo.getJSONArray("animals");
+        List<String> familyUserIds = new ArrayList<>();
         for (int i = 0; i < animals.length(); i++) {
-            userIds.add(animals.getJSONObject(i).getString("userId"));
+            familyUserIds.add(animals.getJSONObject(i).getString("userId"));
+        }
+
+        // 功能执行流
+        if (familySignTips && familyOptions.getValue().contains("familySign")) {
+            AntFarmFamily.INSTANCE.familySign();
         }
         
-        // 4. 生成消息
-        String message = generateMorningMessage();
-        
-        // 5. 调用RPC发送
-        JSONObject res = new JSONObject(AntFarmRpcCall.deliverMsgSend(
-            message,
-            userIds,
-            familyInfo.getString("groupId")
-        ));
-        
-        if (res.optBoolean("success", false)) {
-            Log.farm(TAG, "早安发送成功，接收人：" + userIds.size() + "人");
-        } else {
-            Log.farm(TAG, "发送失败：" + res.optString("memo", "未知错误"));
+        if (familyAwardNum > 0 && familyOptions.getValue().contains("familyClaimReward")) {
+            AntFarmFamily.INSTANCE.familyClaimRewardList();
         }
-    } catch (Exception e) {
-        Log.printStackTrace(TAG, e);
+        
+        if (familyOptions.getValue().contains("feedFriendAnimal")) {
+            familyFeedFriendAnimal(animals);
+        }
+        
+        if (familyOptions.getValue().contains("eatTogetherConfig")) {
+            familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds);
+        }
+        
+        // 优化后的早安功能
+        if (familyOptions.getValue().contains("sendMorningMsg")) {
+            handleMorningGreeting(familyUserIds);
+        }
+        
+        if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
+            inviteFriendVisitFamily(familyUserIds);
+        }
+        
+        if (familyDrawInfo.getBoolean("drawActivitySwitch") && 
+            familyOptions.getValue().contains("familyDrawInfo")) {
+            familyDrawTask(familyUserIds, familyDrawInfo);
+        }
+    } catch (Throwable t) {
+        Log.runtime(TAG, "family err:");
+        Log.printStackTrace(TAG, t);
     }
 }
 
-private String generateMorningMessage() {
-    String[] templates = {
-        "清晨的阳光带来了新的希望，早安！",
-        "美好的一天从此刻开始，记得微笑哦~",
-        "您的小鸡准时上线啦，今天也要元气满满！"
-    };
-    return templates[new Random().nextInt(templates.length)];
+// 早安消息模板
+private static final String[] MORNING_TEMPLATES = {
+    "清晨的阳光带来了新的希望，早安！",
+    "美好的一天从此刻开始，记得微笑哦~",
+    "您的小鸡准时上线啦，今天也要元气满满！"
+};
+
+// 新版早安处理
+private void handleMorningGreeting(List<String> userIds) {
+    if (!isMorningTime()) {
+        Log.farm(TAG, "早安发送跳过：当前时段06:00-10:00外");
+        return;
+    }
+    try {
+        String message = MORNING_TEMPLATES[new Random().nextInt(MORNING_TEMPLATES.length)];
+        boolean success = AntFarmRpcCall.sendFamilyMorningGreeting(userIds,familyGroupId,message);
+        Log.farm(TAG, "早安发送" + (success ? "成功" : "失败"));
+    } catch (Exception e) {
+        Log.printStackTrace(TAG, "早安发送异常", e);
+    }
 }
 
+// 时段检查
+private boolean isMorningTime() {
+    int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+    return hour >= 6 && hour < 10;
+}
+    
     private void syncFamilyStatusIntimacy(String groupId) {
         try {
             String userId = UserMap.getCurrentUid();
