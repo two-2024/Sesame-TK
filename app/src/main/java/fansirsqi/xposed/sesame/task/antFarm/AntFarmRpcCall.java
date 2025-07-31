@@ -684,6 +684,16 @@ public class AntFarmRpcCall {
         String args = "[{\"friendUserIds\":" + friendUserIdList + ",\"requestType\":\"NORMAL\",\"sceneCode\":\"ChickFamily\",\"source\":\"H5\"}]";
         return RequestManager.requestString("com.alipay.antfarm.deliverSubjectRecommend", args);
     }
+    
+    public static String deliverSubjectRecommend(JSONArray friendUserIds) throws JSONException {
+        JSONObject args = new JSONObject();
+        args.put("friendUserIds", friendUserIds);
+        args.put("requestType", "NORMAL");
+        args.put("sceneCode", "ChickFamily");
+        args.put("source", "H5");
+        String params = "[" + args.toString() + "]";
+        return RequestManager.requestString("com.alipay.antfarm.deliverSubjectRecommend", params);
+    }
 
     public static String deliverContentExpand(JSONArray friendUserIdList, String ariverRpcTraceId) throws JSONException {
         JSONObject args = new JSONObject();
