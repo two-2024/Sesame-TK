@@ -10,7 +10,7 @@ import java.net.URL
 
 object FansirsqiUtil {
     // 定义一言API的URL
-    private const val HITOKOTO_API_URL = "https://60s.cccccc.plus/v2/hitokoto"
+    private const val HITOKOTO_API_URL = "https://60s.cccccc.plus/v2/love"
 
     /**
      * 获取一言（挂起函数），推荐在协程中使用
@@ -33,8 +33,9 @@ object FansirsqiUtil {
             val dataObject = jsonObject.getJSONObject("data")
             // 从data对象中提取hitokoto字段
             val hitokoto = dataObject.optString(
-                "hitokoto",
-                " 记得好好吃饭。"
+                //"hitokoto", //一言接口返回字段
+                "love", // 爱情语录
+                " 好好吃饭。"
             )
 //            val from = jsonObject.optString("from", "少年游·润州作代人寄远 苏轼")
 
