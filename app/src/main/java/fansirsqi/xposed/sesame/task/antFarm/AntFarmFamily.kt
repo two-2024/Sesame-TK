@@ -339,25 +339,122 @@ val subjectResp = JSONObject(
 
         // 构造传话内容
         val expandResp = JSONObject(
-            AntFarmRpcCall.deliverContentExpand(userIds, traceId)
-        )
-        if (!ResChecker.checkRes(TAG, expandResp)) return
-
-        GlobalThreadPools.sleep(500)
-
-        // 发送传话消息
-        val sendResp = JSONObject(
-            AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId)
-        )
-        if (ResChecker.checkRes(TAG, sendResp)) {
-            Log.farm("家庭任务🏠道早安：$content 🌈")
-            Status.setFlagToday("antFarm::deliverMsgSend")
+public void deliverMsgSend(List<String> familyUserIds) {
+    try {
+        // 时间窗口判断 6:00-10:00
+        Calendar now = Calendar.getInstance();
+        Calendar startTime = Calendar.getInstance();
+        startTime.set(Calendar.HOUR_OF_DAY, 6);
+        startTime.set(Calendar.MINUTE, 0);
+        Calendar endTime = Calendar.getInstance();
+        endTime.set(Calendar.HOUR_OF_DAY, 10);
+        endTime.set(Calendar.MINUTE, 0);
+        if (now.before(startTime) || now.after(endTime)) {
+            Log.record(TAG, "当前不在道早安时间窗口，跳过任务");
+            return;
         }
-    } catch (t: Throwable) {
-        Log.printStackTrace(TAG, "deliverMsgSend 执行异常：", t)
+
+        if (groupId == null || groupId.isEmpty()) {
+            Log.record(TAG, "未绑定家庭 groupId，跳过任务");
+            return;
+        }
+
+        // 移除当前用户
+        familyUserIds.remove(UserMap.currentUid());
+        if (familyUserIds.isEmpty()) {
+            Log.record(TAG, "家庭成员为空，跳过任务");
+            return;
+        }
+
+        if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
+            Log.record(TAG, "今日已执行道早安任务");
+            return;
+        }
+
+        JSONArray userIds = new JSONArray();
+        for (String uid : familyUserIds) {
+            userIds.put(uid);
+        }
+
+        // 1. familyTaskTips 检查任务状态（你的抓包字段是familyTaskTips数组，找canReceiveAwardCount>0的GREETING）
+        JSONObject taskTipsResp = new JSONObject(AntFarmRpcCall.familyTaskTips());
+        if (!ResChecker.checkRes(TAG, taskTipsResp)) return;
+
+        JSONArray tipsArr = taskTipsResp.optJSONArray("familyTaskTips");
+        if (tipsArr == null || tipsArr.length() == 0) {
+            Log.record(TAG, "家庭任务列表为空，跳过道早安");
+            return;
+        }
+
+        boolean canSayMorning = false;
+        for (int i = 0; i < tipsArr.length(); i++) {
+            JSONObject tip = tipsArr.getJSONObject(i);
+            if ("GREETING".equals(tip.optString("bizKey")) && tip.optInt("canReceiveAwardCount", 0) > 0) {
+                canSayMorning = true;
+                break;
+            }
+        }
+        if (!canSayMorning) {
+            Log.record(TAG, "道早安任务当前不可完成");
+            return;
+        }
+
+        // 2. deliverSubjectRecommend 获取推荐主题
+        JSONObject recommendResp = new JSONObject(
+            AntFarmRpcCall.deliverSubjectRecommend(userIds)
+        );
+        if (!ResChecker.checkRes(TAG, recommendResp)) return;
+
+        String traceId = recommendResp.optString("ariverRpcTraceId");
+        if (traceId.isEmpty()) {
+            Log.record(TAG, "推荐主题返回traceId为空");
+            return;
+        }
+
+        // 3. DeliverContentExpand 生成问候语
+        JSONObject expandResp = new JSONObject(
+            AntFarmRpcCall.deliverContentExpand(userIds, traceId)
+        );
+        if (!ResChecker.checkRes(TAG, expandResp)) return;
+
+        String content = expandResp.optString("content");
+        String deliverId = expandResp.optString("deliverId");
+        if (content.isEmpty() || deliverId.isEmpty()) {
+            Log.record(TAG, "传话内容或deliverId为空");
+            return;
+        }
+
+        // 4. QueryExpandContent 再确认内容（可选，看你是否需要）
+        JSONObject queryResp = new JSONObject(
+            AntFarmRpcCall.queryExpandContent(deliverId)
+        );
+        if (!ResChecker.checkRes(TAG, queryResp)) return;
+
+        String finalContent = queryResp.optString("content", content);
+
+        // 5. 发送消息 DeliverMsgSend
+        JSONObject sendResp = new JSONObject(
+            AntFarmRpcCall.deliverMsgSend(groupId, userIds, finalContent, deliverId)
+        );
+        if (ResChecker.checkRes(TAG, sendResp)) {
+            Log.farm(TAG, "家庭任务🏠道早安：" + finalContent + " 🌈");
+            Status.setFlagToday("antFarm::deliverMsgSend");
+
+            // 6. 同步家庭状态（更新亲密度、任务进度）
+            JSONObject syncResp = new JSONObject(
+                AntFarmRpcCall.syncFamilyStatus(groupId, userIds)
+            );
+            if (ResChecker.checkRes(TAG, syncResp)) {
+                Log.record(TAG, "同步家庭状态成功");
+            } else {
+                Log.record(TAG, "同步家庭状态失败");
+            }
+        }
+
+    } catch (Throwable t) {
+        Log.printStackTrace(TAG, "deliverMsgSend 执行异常：", t);
     }
 }
-
     /** 好友分享家庭 */
     private fun familyShareToFriends(familyUserIds: MutableList<String>, notInviteList: SelectModelField) {
         try {
