@@ -281,9 +281,9 @@ data object AntFarmFamily {
  * 发送道早安
  * @param familyUserIds 家庭成员列表
  */
-fun deliverMsgSend(familyUserIds: MutableList<String>) {
+fun deliverMsgSend(groupId: String, familyUserIds: MutableList<String>) {
     try {
-        // 时间窗口检查（早上6点-10点）
+        // 时间窗口检查 6:00 - 10:00
         val now = Calendar.getInstance()
         val startTime = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 6)
@@ -298,8 +298,7 @@ fun deliverMsgSend(familyUserIds: MutableList<String>) {
             return
         }
 
-        // 检查 groupId 是否存在
-        if (groupId == null) {
+        if (groupId.isEmpty()) {
             Log.record("未绑定家庭 groupId，跳过任务")
             return
         }
@@ -311,150 +310,111 @@ fun deliverMsgSend(familyUserIds: MutableList<String>) {
             return
         }
 
-        // 避免重复执行
         if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
             Log.record("今日已执行道早安任务")
             return
         }
 
-        // 构造 userIds 参数
         val userIds = JSONArray()
         familyUserIds.forEach { userIds.put(it) }
 
-        // 获取推荐传话主题
-val subjectResp = JSONObject(
-    AntFarmRpcCall.deliverSubjectRecommend(userIds) // ✅ 修复：去掉命名参数
-)
+        // 1. familyTaskTips 检查任务状态
+        val taskTipsRespStr = AntFarmRpcCall.familyTaskTips()
+        val taskTipsResp = JSONObject(taskTipsRespStr)
+        if (!ResChecker.checkRes("小鸡家庭", taskTipsResp)) return
 
-        if (!ResChecker.checkRes(TAG, subjectResp)) return
-
-        val traceId = subjectResp.optString("ariverRpcTraceId")
-        val content = subjectResp.optString("content")
-        val deliverId = subjectResp.optString("deliverId")
-
-        if (traceId.isNullOrEmpty() || content.isNullOrEmpty() || deliverId.isNullOrEmpty()) {
-            Log.record("推荐传话响应字段缺失")
+        val dataTips = taskTipsResp.optJSONObject("Data") ?: run {
+            Log.record("familyTaskTips响应缺少Data字段")
+            return
+        }
+        val tipsArr = dataTips.optJSONArray("familyTaskTips")
+        if (tipsArr == null || tipsArr.length() == 0) {
+            Log.record("家庭任务列表为空，跳过道早安")
             return
         }
 
-        // 构造传话内容
-        val expandResp = JSONObject(
-public void deliverMsgSend(List<String> familyUserIds) {
-    try {
-        // 时间窗口判断 6:00-10:00
-        Calendar now = Calendar.getInstance();
-        Calendar startTime = Calendar.getInstance();
-        startTime.set(Calendar.HOUR_OF_DAY, 6);
-        startTime.set(Calendar.MINUTE, 0);
-        Calendar endTime = Calendar.getInstance();
-        endTime.set(Calendar.HOUR_OF_DAY, 10);
-        endTime.set(Calendar.MINUTE, 0);
-        if (now.before(startTime) || now.after(endTime)) {
-            Log.record(TAG, "当前不在道早安时间窗口，跳过任务");
-            return;
-        }
-
-        if (groupId == null || groupId.isEmpty()) {
-            Log.record(TAG, "未绑定家庭 groupId，跳过任务");
-            return;
-        }
-
-        // 移除当前用户
-        familyUserIds.remove(UserMap.currentUid());
-        if (familyUserIds.isEmpty()) {
-            Log.record(TAG, "家庭成员为空，跳过任务");
-            return;
-        }
-
-        if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
-            Log.record(TAG, "今日已执行道早安任务");
-            return;
-        }
-
-        JSONArray userIds = new JSONArray();
-        for (String uid : familyUserIds) {
-            userIds.put(uid);
-        }
-
-        // 1. familyTaskTips 检查任务状态（你的抓包字段是familyTaskTips数组，找canReceiveAwardCount>0的GREETING）
-        JSONObject taskTipsResp = new JSONObject(AntFarmRpcCall.familyTaskTips());
-        if (!ResChecker.checkRes(TAG, taskTipsResp)) return;
-
-        JSONArray tipsArr = taskTipsResp.optJSONArray("familyTaskTips");
-        if (tipsArr == null || tipsArr.length() == 0) {
-            Log.record(TAG, "家庭任务列表为空，跳过道早安");
-            return;
-        }
-
-        boolean canSayMorning = false;
-        for (int i = 0; i < tipsArr.length(); i++) {
-            JSONObject tip = tipsArr.getJSONObject(i);
-            if ("GREETING".equals(tip.optString("bizKey")) && tip.optInt("canReceiveAwardCount", 0) > 0) {
-                canSayMorning = true;
-                break;
+        var canSayMorning = false
+        for (i in 0 until tipsArr.length()) {
+            val tip = tipsArr.getJSONObject(i)
+            if (tip.optString("bizKey") == "GREETING" && tip.optInt("canReceiveAwardCount", 0) > 0) {
+                canSayMorning = true
+                break
             }
         }
         if (!canSayMorning) {
-            Log.record(TAG, "道早安任务当前不可完成");
-            return;
+            Log.record("道早安任务当前不可完成")
+            return
         }
 
         // 2. deliverSubjectRecommend 获取推荐主题
-        JSONObject recommendResp = new JSONObject(
-            AntFarmRpcCall.deliverSubjectRecommend(userIds)
-        );
-        if (!ResChecker.checkRes(TAG, recommendResp)) return;
+        val subjectRespStr = AntFarmRpcCall.deliverSubjectRecommend(userIds)
+        val subjectRespJson = JSONObject(subjectRespStr)
+        if (!ResChecker.checkRes("小鸡家庭", subjectRespJson)) return
+        val dataSubject = subjectRespJson.optJSONObject("Data") ?: run {
+            Log.record("deliverSubjectRecommend响应缺少Data字段")
+            return
+        }
 
-        String traceId = recommendResp.optString("ariverRpcTraceId");
+        val traceId = dataSubject.optString("ariverRpcTraceId")
+        val contentFallback = dataSubject.optString("content") // 有时deliverSubjectRecommend没content字段可以做个兜底
+        val deliverIdFallback = dataSubject.optString("deliverId")
+
         if (traceId.isEmpty()) {
-            Log.record(TAG, "推荐主题返回traceId为空");
-            return;
+            Log.record("推荐主题返回traceId为空")
+            return
         }
 
-        // 3. DeliverContentExpand 生成问候语
-        JSONObject expandResp = new JSONObject(
-            AntFarmRpcCall.deliverContentExpand(userIds, traceId)
-        );
-        if (!ResChecker.checkRes(TAG, expandResp)) return;
+        // 3. deliverContentExpand 生成问候语内容
+        val expandRespStr = AntFarmRpcCall.deliverContentExpand(userIds, traceId)
+        val expandRespJson = JSONObject(expandRespStr)
+        if (!ResChecker.checkRes("小鸡家庭", expandRespJson)) return
+        val dataExpand = expandRespJson.optJSONObject("Data") ?: run {
+            Log.record("deliverContentExpand响应缺少Data字段")
+            return
+        }
 
-        String content = expandResp.optString("content");
-        String deliverId = expandResp.optString("deliverId");
+        val content = dataExpand.optString("content").ifEmpty { contentFallback }
+        val deliverId = dataExpand.optString("deliverId").ifEmpty { deliverIdFallback }
+
         if (content.isEmpty() || deliverId.isEmpty()) {
-            Log.record(TAG, "传话内容或deliverId为空");
-            return;
+            Log.record("传话内容或deliverId为空")
+            return
         }
 
-        // 4. QueryExpandContent 再确认内容（可选，看你是否需要）
-        JSONObject queryResp = new JSONObject(
-            AntFarmRpcCall.queryExpandContent(deliverId)
-        );
-        if (!ResChecker.checkRes(TAG, queryResp)) return;
+        // 4. queryExpandContent 再确认内容（可选）
+        val queryRespStr = AntFarmRpcCall.queryExpandContent(deliverId)
+        val queryRespJson = JSONObject(queryRespStr)
+        if (!ResChecker.checkRes("小鸡家庭", queryRespJson)) return
+        val dataQuery = queryRespJson.optJSONObject("Data") ?: run {
+            Log.record("queryExpandContent响应缺少Data字段")
+            return
+        }
 
-        String finalContent = queryResp.optString("content", content);
+        val finalContent = dataQuery.optString("content", content)
 
-        // 5. 发送消息 DeliverMsgSend
-        JSONObject sendResp = new JSONObject(
-            AntFarmRpcCall.deliverMsgSend(groupId, userIds, finalContent, deliverId)
-        );
-        if (ResChecker.checkRes(TAG, sendResp)) {
-            Log.farm(TAG, "家庭任务🏠道早安：" + finalContent + " 🌈");
-            Status.setFlagToday("antFarm::deliverMsgSend");
+        // 5. 发送道早安消息
+        val sendRespStr = AntFarmRpcCall.deliverMsgSend(groupId, userIds, finalContent, deliverId)
+        val sendRespJson = JSONObject(sendRespStr)
+        if (ResChecker.checkRes("小鸡家庭", sendRespJson)) {
+            Log.farm("小鸡家庭", "家庭任务🏠道早安：$finalContent 🌈")
+            Status.setFlagToday("antFarm::deliverMsgSend")
 
-            // 6. 同步家庭状态（更新亲密度、任务进度）
-            JSONObject syncResp = new JSONObject(
-                AntFarmRpcCall.syncFamilyStatus(groupId, userIds)
-            );
-            if (ResChecker.checkRes(TAG, syncResp)) {
-                Log.record(TAG, "同步家庭状态成功");
+            // 6. 同步家庭状态
+            val syncRespStr = AntFarmRpcCall.syncFamilyStatus(groupId, userIds)
+            val syncRespJson = JSONObject(syncRespStr)
+            if (ResChecker.checkRes("小鸡家庭", syncRespJson)) {
+                Log.record("同步家庭状态成功")
             } else {
-                Log.record(TAG, "同步家庭状态失败");
+                Log.record("同步家庭状态失败")
             }
+        } else {
+            Log.record("deliverMsgSend接口调用失败")
         }
-
-    } catch (Throwable t) {
-        Log.printStackTrace(TAG, "deliverMsgSend 执行异常：", t);
+    } catch (t: Throwable) {
+        Log.printStackTrace("小鸡家庭", "deliverMsgSend 执行异常：", t)
     }
 }
+
     /** 好友分享家庭 */
     private fun familyShareToFriends(familyUserIds: MutableList<String>, notInviteList: SelectModelField) {
         try {
