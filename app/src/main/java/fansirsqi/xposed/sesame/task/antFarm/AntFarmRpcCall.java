@@ -768,7 +768,7 @@ public class AntFarmRpcCall {
             return "{}";
         }
     }
-}
+
         
     public static String syncFamilyStatus(String groupId, String operType, String syncUserIds) {
         String args = "[{\"groupId\":\"" + groupId + "\",\"operType\":\"" + operType + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"syncUserIds\":[\"" + syncUserIds + "\"]}]";
