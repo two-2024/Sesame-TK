@@ -322,8 +322,7 @@ data object AntFarmFamily {
     }
     
     /**
-     * 道早安
-     */
+     * 旧的道早安
      @JvmStatic
 fun deliverMsgSend(familyUserIds: MutableList<String>) {
     try {
@@ -374,8 +373,61 @@ fun deliverMsgSend(familyUserIds: MutableList<String>) {
         Log.printStackTrace(TAG, "deliverMsgSend err:", t)
     }
 }
-
-
+     */
+    /**
+     * 新的道早安
+     */
+     fun sendFamilyGoodMorning(groupId: String, userIds: List<String>) {
+        try {
+            // 1. 触发早安推荐
+            val recommendRes = AntFarmRpcCall.deliverSubjectRecommend(userIds)
+            val recommendJson = JSONObject(recommendRes)
+            
+            if (!recommendJson.getBoolean("success") || 
+                recommendJson.getString("resultCode") != "100") {
+                Log.w(TAG, "早安推荐失败: ${recommendJson.optString("memo")}")
+                return
+            }
+            
+            val traceId = recommendJson.getString("ariverRpcTraceId")
+            
+            // 2. 生成早安内容
+            val contentRes = AntFarmRpcCall.deliverContentExpand(traceId, userIds)
+            val contentJson = JSONObject(contentRes)
+            
+            if (!contentJson.getBoolean("success")) {
+                Log.w(TAG, "生成早安内容失败")
+                return
+            }
+            
+            val deliverId = contentJson.getString("deliverId")
+            var morningContent = contentJson.getString("content")
+            
+            // 3. 可添加自定义内容
+            morningContent += "\n早起的鸟儿有虫吃啊~"
+            
+            // 4. 发送早安
+            val sendRes = AntFarmRpcCall.deliverMsgSend(
+                deliverId, morningContent, userIds, groupId
+            )
+            
+            val sendJson = JSONObject(sendRes)
+            if (sendJson.getBoolean("success")) {
+                Log.i(TAG, "家庭早安发送成功！")
+            } else {
+                Log.w(TAG, "发送失败: ${sendJson.optString("memo")}")
+            }
+            
+        } catch (e: Exception) {
+            Log.printStackTrace(TAG, e)
+        }
+    }
+    
+    companion object {
+        private const val TAG = "AntFarmFamily"
+    }
+}
+     
     /**
      * 好友分享家庭
      * @param familyUserIds 好友列表
