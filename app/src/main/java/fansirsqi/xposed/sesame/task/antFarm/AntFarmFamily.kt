@@ -92,7 +92,7 @@ data object AntFarmFamily {
                 familyEatTogether(eatTogetherConfig, familyInteractActions, familyUserIds)
             }
             if (familyOptions.value.contains("deliverMsgSend")) {
-                deliverMsgSend(familyUserIds)
+               AntFarmFamily.deliverMsgSend(familyUserIds)
             }
             if (familyOptions.value.contains("shareToFriends")) {
                 familyShareToFriends(familyUserIds, notInviteList)
