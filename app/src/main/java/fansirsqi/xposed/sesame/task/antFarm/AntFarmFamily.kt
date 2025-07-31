@@ -320,114 +320,63 @@ data object AntFarmFamily {
         }
         return null
     }
-    
+
+
     /**
-     * 旧的道早安
-     @JvmStatic
-fun deliverMsgSend(familyUserIds: MutableList<String>) {
-    try {
-        val currentTime = Calendar.getInstance()
-        // 6-10点早安时间
-        val startTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 6)
-            set(Calendar.MINUTE, 0)
-        }
-        val endTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 10)
-            set(Calendar.MINUTE, 0)
-        }
-        if (currentTime.before(startTime) || currentTime.after(endTime)) {
-            return
-        }
-        if (groupId.isEmpty()) {
-            return
-        }
-        // 先移除当前用户自己的ID，否则下面接口报错
-        familyUserIds.remove(UserMap.currentUid)
-        if (familyUserIds.isEmpty()) {
-            return
-        }
-        if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
-            return
-        }
-        val userIds = JSONArray()
-        for (userId in familyUserIds) {
-            userIds.put(userId)
-        }
-        val resp1 = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
-        if (ResChecker.checkRes(TAG, resp1)) {
-            val ariverRpcTraceId = resp1.getString("ariverRpcTraceId")
-            val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
-            if (ResChecker.checkRes(TAG, resp2)) {
-                GlobalThreadPools.sleep(500)
-                val content = resp2.getString("content")
-                val deliverId = resp2.getString("deliverId")
-                val resp3 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
-                if (ResChecker.checkRes(TAG, resp3)) {
-                    Log.farm("家庭任务🏠道早安: $content 🌈")
-                    Status.setFlagToday("antFarm::deliverMsgSend")
+     * 发送道早安
+     * @param familyUserIds 家庭成员列表
+     */
+    fun deliverMsgSend(familyUserIds: MutableList<String>) {
+        try {
+            val currentTime = Calendar.getInstance()
+            currentTime.get(Calendar.HOUR_OF_DAY)
+            currentTime.get(Calendar.MINUTE)
+            // 6-10点早安时间
+            val startTime = Calendar.getInstance()
+            startTime.set(Calendar.HOUR_OF_DAY, 6)
+            startTime.set(Calendar.MINUTE, 0)
+            val endTime = Calendar.getInstance()
+            endTime.set(Calendar.HOUR_OF_DAY, 10)
+            endTime.set(Calendar.MINUTE, 0)
+            if (currentTime.before(startTime) || currentTime.after(endTime)) {
+                return
+            }
+            if (Objects.isNull(groupId)) {
+                return
+            }
+            // 先移除当前用户自己的ID，否则下面接口报错
+            familyUserIds.remove(UserMap.currentUid)
+            if (familyUserIds.isEmpty()) {
+                return
+            }
+            if (Status.hasFlagToday("antFarm::deliverMsgSend")) {
+                return
+            }
+            val userIds = JSONArray()
+            for (userId in familyUserIds) {
+                userIds.put(userId)
+            }
+            val resp1 = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
+            if (ResChecker.checkRes(TAG, resp1)) {
+                val ariverRpcTraceId = resp1.getString("ariverRpcTraceId")
+                val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
+                if (ResChecker.checkRes(TAG, resp2)) {
+                    GlobalThreadPools.sleep(500)
+                    val content = resp1.getString("content")
+                    val deliverId = resp1.getString("deliverId")
+                    val resp3 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
+                    if (ResChecker.checkRes(TAG, resp3)) {
+                        Log.farm("家庭任务🏠道早安: $content 🌈")
+                        Status.setFlagToday("antFarm::deliverMsgSend")
+                    }
                 }
             }
-        }
-    } catch (t: Throwable) {
-        Log.printStackTrace(TAG, "deliverMsgSend err:", t)
-    }
-}
-     */
-    /**
-     * 新的道早安
-     */
-     fun sendFamilyGoodMorning(groupId: String, userIds: List<String>) {
-        try {
-            // 1. 触发早安推荐
-            val recommendRes = AntFarmRpcCall.deliverSubjectRecommend(userIds)
-            val recommendJson = JSONObject(recommendRes)
-            
-            if (!recommendJson.getBoolean("success") || 
-                recommendJson.getString("resultCode") != "100") {
-                Log.w(TAG, "早安推荐失败: ${recommendJson.optString("memo")}")
-                return
-            }
-            
-            val traceId = recommendJson.getString("ariverRpcTraceId")
-            
-            // 2. 生成早安内容
-            val contentRes = AntFarmRpcCall.deliverContentExpand(traceId, userIds)
-            val contentJson = JSONObject(contentRes)
-            
-            if (!contentJson.getBoolean("success")) {
-                Log.w(TAG, "生成早安内容失败")
-                return
-            }
-            
-            val deliverId = contentJson.getString("deliverId")
-            var morningContent = contentJson.getString("content")
-            
-            // 3. 可添加自定义内容
-            morningContent += "\n早起的鸟儿有虫吃啊~"
-            
-            // 4. 发送早安
-            val sendRes = AntFarmRpcCall.deliverMsgSend(
-                deliverId, morningContent, userIds, groupId
-            )
-            
-            val sendJson = JSONObject(sendRes)
-            if (sendJson.getBoolean("success")) {
-                Log.i(TAG, "家庭早安发送成功！")
-            } else {
-                Log.w(TAG, "发送失败: ${sendJson.optString("memo")}")
-            }
-            
-        } catch (e: Exception) {
-            Log.printStackTrace(TAG, e)
+        } catch (t: Throwable) {
+            Log.printStackTrace(TAG, "deliverMsgSend err:", t)
         }
     }
-    
-    companion object {
-        private const val TAG = "AntFarmFamily"
-    }
-}
-     
+
+
     /**
      * 好友分享家庭
      * @param familyUserIds 好友列表
@@ -501,4 +450,6 @@ fun deliverMsgSend(familyUserIds: MutableList<String>) {
             else -> "$value$unit 前"
         }
     }
+
+
 }
