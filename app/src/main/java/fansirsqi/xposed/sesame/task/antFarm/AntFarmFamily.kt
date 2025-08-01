@@ -334,60 +334,54 @@ data object AntFarmFamily {
     try {
         val now = Calendar.getInstance()
         val hour = now.get(Calendar.HOUR_OF_DAY)
-        val minute = now.get(Calendar.MINUTE)
-        if (hour !in 6..9) return // 避免误判10:00整
+        if (hour !in 6..9) return
         
         if (groupId.isNullOrEmpty()) return
-
+        
         familyUserIds.remove(UserMap.currentUid)
         if (familyUserIds.isEmpty()) return
-
+        
         if (Status.hasFlagToday("antFarm::deliverMsgSend")) return
-
+        
         val userIds = JSONArray()
         familyUserIds.forEach { userIds.put(it) }
-
-        // Step 1: 获取 AI 场景
+        
         val recommendResp = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
         if (!ResChecker.checkRes(TAG, recommendResp)) return
-
-        val eventId = recommendResp.getString("eventId")
-        val sceneId = recommendResp.getString("sceneId")
-        val traceId = recommendResp.getString("ariverRpcTraceId")
-
-        // Step 2: 获取 AI 内容
-        val contentResp = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, traceId, eventId, sceneId))
+        
+        val traceId = recommendResp.optString("ariverRpcTraceId")
+        if (traceId.isEmpty()) return
+        
+        val contentResp = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, traceId))
         if (!ResChecker.checkRes(TAG, contentResp)) return
-
-        val content = contentResp.getString("content")
-        val deliverId = contentResp.getString("deliverId")
-
-        // Step 3（可选）: 查询确认内容（和抓包一致）
-        AntFarmRpcCall.queryExpandContent(deliverId)
-
-        // Step 4: 发送早安
+        
+        val content = contentResp.optString("content")
+        val deliverId = contentResp.optString("deliverId")
+        if (content.isEmpty() || deliverId.isEmpty()) return
+        
+        // 使用类名调用方法
+        AntFarmRpcCall.QueryExpandContent(deliverId)
+        
+        // 注意：Java静态方法调用不支持命名参数，改用位置参数
         val sendResp = JSONObject(AntFarmRpcCall.deliverMsgSend(
-            groupId = groupId!!,
-            friendUserIds = userIds,
-            content = content,
-            deliverId = deliverId,
-            mode = "AI",  // <== 关键字段
-            spaceType = "ChickFamily", // <== 关键字段
-            sceneCode = "ANTFARM"
+            groupId!!,
+            userIds,
+            content,
+            deliverId
         ))
         if (!ResChecker.checkRes(TAG, sendResp)) return
-
+        
         Log.farm("家庭任务🏠道早安: $content 🌈")
         Status.setFlagToday("antFarm::deliverMsgSend")
-
-        // Step 5: 同步亲密度
-        AntFarmRpcCall.syncFamilyStatus(groupId, familyUserIds)
-
+        
+        // syncFamilyStatus传单个字符串参数，这里假设拼接成逗号分隔字符串
+        val syncUserIdsStr = familyUserIds.joinToString(",")
+        AntFarmRpcCall.syncFamilyStatus(groupId!!, "INTIMACY_VALUE", syncUserIdsStr)
+        
     } catch (t: Throwable) {
         Log.printStackTrace(TAG, "deliverMsgSend err:", t)
     }
 }
-
 
     /**
      * 好友分享家庭
