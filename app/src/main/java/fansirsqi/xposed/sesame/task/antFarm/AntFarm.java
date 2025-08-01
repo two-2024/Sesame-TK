@@ -2777,7 +2777,7 @@ public class AntFarm extends ModelTask {
         }
          // 道早安
         if (familyOptions.getValue().contains("deliverMsgSend")) {
-           AntFarmFamily.INSTANCE.deliverMsgSend(familyUserIds);
+            AntFarmFamily.INSTANCE.deliverMsgSend(familyUserIds);
         }
          //好友分享
         if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
