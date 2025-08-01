@@ -997,10 +997,6 @@ private boolean hasEnergyBombProtection(JSONObject userHomeObj, long serverTime,
                 if (explodedIds != null) {
                     for (int j = 0; j < explodedIds.length(); j++) {
                         if (selfId.equals(explodedIds.optString(j))) {
-                            // 记录日志
-                            String userId = userHomeObj.optString("userId");
-                            String userName = UserMap.getMaskName(userId);
-                            Log.forest(TAG, "⚠️ [" + userName + "]放了炸弹卡，危险！");
                             return true;
                         }
                     }
