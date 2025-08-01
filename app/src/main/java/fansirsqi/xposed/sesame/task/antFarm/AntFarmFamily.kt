@@ -371,8 +371,8 @@ data object AntFarmFamily {
 
         // 同步亲密度，传JSONArray
         val syncUserIds = JSONArray()
-        familyUserIds.forEach { syncUserIds.put(it) }
-        AntFarmRpcCall.syncFamilyStatus(groupId!!, "INTIMACY_VALUE", syncUserIds)
+         familyUserIds.forEach { syncUserIds.put(it) }
+         AntFarmRpcCall.syncFamilyStatus(groupId!!, "INTIMACY_VALUE", syncUserIds)
     } catch (t: Throwable) {
         Log.printStackTrace(TAG, "deliverMsgSend err:", t)
     }
