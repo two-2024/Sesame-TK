@@ -822,6 +822,36 @@ public class AntForest extends ModelTask {
         return friendHomeObj; // 返回用户主页对象
     }
 
+    /**
+ * 根据 userId 获取好友显示名称（包括 PK 好友）
+ * 如本地名称为空，则尝试通过 queryFriendHome 补全
+ */
+private String resolveFriendName(String userId) {
+    try {
+        // 优先查 UserMap 的掩码名
+        String maskName = UserMap.getMaskName(userId);
+        if (!StringUtil.isEmpty(maskName)) return maskName;
+
+        // 请求主页信息以获取名称（PK 好友情况）
+        JSONObject home = queryFriendHome(userId);
+        if (home != null) {
+            JSONObject user = home.optJSONObject("user");
+            if (user != null) {
+                String name = user.optString("displayName", null);
+                if (StringUtil.isEmpty(name)) {
+                    name = user.optString("nickName", null);
+                }
+                if (StringUtil.isEmpty(name)) {
+                    name = user.optString("userName", null);
+                }
+                return StringUtil.isEmpty(name) ? userId : name;
+            }
+        }
+    } catch (Throwable t) {
+        Log.printStackTrace(TAG, "resolveFriendName 异常", t);
+    }
+    return userId; // 全部失败时返回 userId
+}
 
     /**
      * 格式化时间差为人性化的字符串
@@ -1132,6 +1162,7 @@ private void collectPkFriendEnergy() {
             Log.printStackTrace(TAG, "queryTopEnergyChallengeRanking 异常", t);
         }
     }
+    
     private void collectFriendEnergy() {
         try {
             JSONObject friendsObject = new JSONObject(AntForestRpcCall.queryEnergyRanking());
@@ -1205,8 +1236,8 @@ private void collectPkFriendEnergy() {
     private void processSingleFriend(JSONObject friendObj) {
         try {
             String userId = friendObj.getString("userId");
-            String userName = UserMap.getMaskName(userId);
             if (Objects.equals(userId, selfId)) return;//如果是自己，则跳过
+            String userName = resolveFriendName(userId); // 替换获取名称方式
             boolean needCollectEnergy = collectEnergy.getValue() && !dontCollectMap.contains(userId); //开启了收能量功能并且不在排除名单中
             boolean needHelpProtect = helpFriendCollectType.getValue() != HelpFriendCollectType.NONE && friendObj.optBoolean("canProtectBubble") && Status.hasFlagToday("help_friend_collect_protect::" + selfId);
 
@@ -1439,10 +1470,10 @@ private void collectPkFriendEnergy() {
                         String resultCode = jo.getString("resultCode");
                         if (!"SUCCESS".equalsIgnoreCase(resultCode)) {
                             if ("PARAM_ILLEGAL2".equals(resultCode)) {
-                                Log.record(TAG, "[" + UserMap.getMaskName(userId) + "]" + "能量已被收取,取消重试 错误:" + jo.getString("resultDesc"));
+                                Log.record(TAG, "[" + resolveFriendName(userId) + "]" + "能量已被收取,取消重试 错误:" + jo.getString("resultDesc"));
                                 return;
                             }
-                            Log.record(TAG, "[" + UserMap.getMaskName(userId) + "]" + jo.getString("resultDesc"));
+                            Log.record(TAG, "[" + resolveFriendName(userId) + "]" + jo.getString("resultDesc"));
                             if (tryCount < tryCountInt) {
                                 collectEnergyEntity.setNeedRetry();
                                 collectEnergy(collectEnergyEntity);
@@ -1464,7 +1495,7 @@ private void collectPkFriendEnergy() {
                                 FriendWatch.friendWatch(userId, collected);
                                 int randomIndex = random.nextInt(emojiList.size());
                                 String randomEmoji = emojiList.get(randomIndex);
-                                String str = "一键收取️" + randomEmoji + collected + "g[" + UserMap.getMaskName(userId) + "]#";
+                                String str = "一键收取️" + randomEmoji + collected + "g[" + resolveFriendName(userId) + "]#";
                                 if (needDouble) {
                                     Log.forest(str + "耗时[" + spendTime + "]ms[双击]");
                                     Toast.show(str + "[双击]");
@@ -1474,7 +1505,7 @@ private void collectPkFriendEnergy() {
                                 }
                                 Statistics.addData(Statistics.DataType.COLLECTED, collected);
                             } else {
-                                Log.record(TAG, "一键收取❌[" + UserMap.getMaskName(userId) + "]的能量失败" + " " + "，UserID：" + userId + "，BubbleId：" + newBubbleIdList);
+                                Log.record(TAG, "一键收取❌[" + resolveFriendName(userId) + "]的能量失败" + " " + "，UserID：" + userId + "，BubbleId：" + newBubbleIdList);
                             }
                             if (!newBubbleIdList.isEmpty()) {
                                 collectEnergyEntity.setRpcEntity(AntForestRpcCall.getCollectBatchEnergyRpcEntity(userId, newBubbleIdList));
@@ -1489,7 +1520,7 @@ private void collectPkFriendEnergy() {
                             if (collected > 0) {
                                 int randomIndex = random.nextInt(emojiList.size());
                                 String randomEmoji = emojiList.get(randomIndex);
-                                String str = "普通收取" + randomEmoji + collected + "g[" + UserMap.getMaskName(userId) + "]";
+                                String str = "普通收取" + randomEmoji + collected + "g[" + resolveFriendName(userId) + "]";
                                 if (needDouble) {
                                     Log.forest(str + "耗时[" + spendTime + "]ms[双击]");
                                     Toast.show(str + "[双击]");
@@ -1499,7 +1530,7 @@ private void collectPkFriendEnergy() {
                                 }
                                 Statistics.addData(Statistics.DataType.COLLECTED, collected);
                             } else {
-                                Log.record(TAG, "普通收取❌[" + UserMap.getMaskName(userId) + "]的能量失败");
+                                Log.record(TAG, "普通收取❌[" + resolveFriendName(userId) + "]的能量失败");
                                 Log.runtime(TAG, "，UserID：" + userId + "，BubbleId：" + bubble.getLong("id"));
                             }
                             if (bubble.getBoolean("canBeRobbedAgain")) {
