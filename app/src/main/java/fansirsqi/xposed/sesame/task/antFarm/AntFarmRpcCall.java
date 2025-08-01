@@ -656,137 +656,201 @@ public class AntFarmRpcCall {
     }
 
     public static String familyReceiveFarmTaskAward(String taskId) {
-        String args = "[{\"awardType\":\"FAMILY_INTIMACY\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"taskId\":\"" + taskId + "\",\"taskSceneCode\":\"ANTFARM_FAMILY_TASK\"}]";
-        return RequestManager.requestString("com.alipay.antfarm.receiveFarmTaskAward", args);
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("awardType", "FAMILY_INTIMACY");
+            obj.put("requestType", "NORMAL");
+            obj.put("sceneCode", "ANTFARM");
+            obj.put("source", "H5");
+            obj.put("taskId", taskId);
+            obj.put("taskSceneCode", "ANTFARM_FAMILY_TASK");
+
+            JSONArray arr = new JSONArray();
+            arr.put(obj);
+
+            return RequestManager.requestString("com.alipay.antfarm.receiveFarmTaskAward", arr.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static String familyAwardList() {
-        String args = "[{\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]";
-        return RequestManager.requestString("com.alipay.antfarm.familyAwardList", args);
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("requestType", "NORMAL");
+            obj.put("sceneCode", "ANTFARM");
+            obj.put("source", "H5");
+
+            JSONArray arr = new JSONArray();
+            arr.put(obj);
+
+            return RequestManager.requestString("com.alipay.antfarm.familyAwardList", arr.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static String receiveFamilyAward(String rightId) {
-        String args = "[{\"requestType\":\"NORMAL\",\"rightId\":\"" + rightId + "\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]";
-        return RequestManager.requestString("com.alipay.antfarm.receiveFamilyAward", args);
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("requestType", "NORMAL");
+            obj.put("rightId", rightId);
+            obj.put("sceneCode", "ANTFARM");
+            obj.put("source", "H5");
+
+            JSONArray arr = new JSONArray();
+            arr.put(obj);
+
+            return RequestManager.requestString("com.alipay.antfarm.receiveFamilyAward", arr.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static String assignFamilyMember(String assignAction, String beAssignUser) {
-        return RequestManager.requestString("com.alipay.antfarm.assignFamilyMember",
-                "[{\"assignAction\":\"" + assignAction + "\",\"beAssignUser\":\"" + beAssignUser + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]");
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("assignAction", assignAction);
+            obj.put("beAssignUser", beAssignUser);
+            obj.put("requestType", "NORMAL");
+            obj.put("sceneCode", "ANTFARM");
+            obj.put("source", "H5");
+
+            JSONArray arr = new JSONArray();
+            arr.put(obj);
+
+            return RequestManager.requestString("com.alipay.antfarm.assignFamilyMember", arr.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static String sendChat(String chatCardType, String receiverUserId) {
-        return RequestManager.requestString("com.alipay.antfarm.sendChat",
-                "[{\"chatCardType\":\"" + chatCardType + "\",\"receiverUserId\":\"" + receiverUserId + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]");
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("chatCardType", chatCardType);
+            obj.put("receiverUserId", receiverUserId);
+            obj.put("requestType", "NORMAL");
+            obj.put("sceneCode", "ANTFARM");
+            obj.put("source", "H5");
+
+            JSONArray arr = new JSONArray();
+            arr.put(obj);
+
+            return RequestManager.requestString("com.alipay.antfarm.sendChat", arr.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
     
-      /**
-     * 家庭任务提示接口（familyTaskTips）
-     * @return 接口返回的完整JSON字符串
-     */
-    public static String familyTaskTips() {
-        try {
-            String body = "{\"operationType\":\"com.alipay.antfarm.familyTaskTips\",\"requestData\":[{\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"taskSceneCode\":\"ANTFARM_FAMILY_TASK\",\"timeZoneId\":\"Asia/Shanghai\"}]}";
-            return HttpUtil.post("/com.alipay.antfarm.familyTaskTips", body);
-        } catch (Throwable t) {
-            Log.printStackTrace(TAG, "familyTaskTips 调用异常:", t);
-            return "{}";
-        }
+        public static String deliverSubjectRecommend(JSONArray friendUserIdList) {
+        String args = "[{\"friendUserIds\":" + friendUserIdList + ",\"requestType\":\"NORMAL\",\"sceneCode\":\"ChickFamily\",\"source\":\"H5\"}]";
+        return RequestManager.requestString("com.alipay.antfarm.deliverSubjectRecommend", args);
     }
 
-    /**
-     * 推荐“道早安”主题（deliverSubjectRecommend）
-     * @param userIds JSONArray的用户ID列表
-     * @return 接口返回的完整JSON字符串
-     */
-    public static String deliverSubjectRecommend(JSONArray userIds) {
-        try {
-            String body = "{\"operationType\":\"com.alipay.antfarm.deliverSubjectRecommend\",\"requestData\":[{\"friendUserIds\":" + userIds.toString() + ",\"requestType\":\"NORMAL\",\"sceneCode\":\"ChickFamily\",\"source\":\"H5\"}]}";
-            return HttpUtil.post("/com.alipay.antfarm.deliverSubjectRecommend", body);
-        } catch (Throwable t) {
-            Log.printStackTrace(TAG, "deliverSubjectRecommend 调用异常:", t);
-            return "{}";
-        }
+    public static String deliverContentExpand(JSONArray friendUserIdList, String ariverRpcTraceId) throws JSONException {
+        JSONObject args = new JSONObject();
+        args.put("ariverRpcTraceId", ariverRpcTraceId);
+        args.put("eventId", "event-deliver-familygoodmorning");
+        args.put("eventName", "AI传话家庭版早安");
+        args.put("friendUserIds", friendUserIdList);
+        args.put("memo", "SUCCESS");
+        args.put("requestType", "NORMAL");
+        args.put("resultCode", "100");
+        args.put("sceneCode", "ANTFARM");
+        args.put("sceneId", "deliver-familygoodmorning");
+        args.put("sceneName", "小鸡传话家庭版早安");
+        args.put("source", "H5");
+        args.put("success", true);
+
+        String params = "[" + args.toString() + "]";
+        return RequestManager.requestString("com.alipay.antfarm.DeliverContentExpand", params);
     }
 
-    /**
-     * 生成问候语内容（DeliverContentExpand）
-     * @param userIds JSONArray的用户ID列表
-     * @param traceId 推荐主题接口返回的traceId
-     * @return 接口返回的完整JSON字符串
-     */
-    public static String deliverContentExpand(JSONArray userIds, String traceId) {
-        try {
-            String body = "{\"operationType\":\"com.alipay.antfarm.DeliverContentExpand\",\"requestData\":[{\"ariverRpcTraceId\":\"" + traceId + "\",\"eventId\":\"event-deliver-familygoodmorning\",\"eventName\":\"AI传话家庭版早安\",\"friendUserIds\":" + userIds.toString() + ",\"memo\":\"SUCCESS\",\"requestType\":\"NORMAL\",\"resultCode\":\"100\",\"sceneCode\":\"ANTFARM\",\"sceneId\":\"deliver-familygoodmorning\",\"sceneName\":\"小鸡传话家庭版早安\",\"source\":\"H5\",\"success\":true}]}";
-            return HttpUtil.post("/com.alipay.antfarm.DeliverContentExpand", body);
-        } catch (Throwable t) {
-            Log.printStackTrace(TAG, "deliverContentExpand 调用异常:", t);
-            return "{}";
-        }
+    public static String QueryExpandContent(String deliverId) throws JSONException {
+        JSONObject args = new JSONObject();
+        args.put("requestType", "NORMAL");
+        args.put("sceneCode", "ANTFARM");
+        args.put("source", "H5");
+        args.put("deliverId", deliverId);
+
+        String params = "[" + args.toString() + "]";
+        return RequestManager.requestString("com.alipay.antfarm.QueryExpandContent", params);
     }
 
-    /**
-     * 再次确认内容（QueryExpandContent）
-     * @param deliverId 传话内容ID
-     * @return 接口返回的完整JSON字符串
-     */
-    public static String queryExpandContent(String deliverId) {
-        try {
-            String body = "{\"operationType\":\"com.alipay.antfarm.QueryExpandContent\",\"requestData\":[{\"deliverId\":\"" + deliverId + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]}";
-            return HttpUtil.post("/com.alipay.antfarm.QueryExpandContent", body);
-        } catch (Throwable t) {
-            Log.printStackTrace(TAG, "queryExpandContent 调用异常:", t);
-            return "{}";
-        }
-    }
+    public static String deliverMsgSend(String groupId, JSONArray friendUserIds, String content, String deliverId) throws JSONException {
+        JSONObject args = new JSONObject();
+        args.put("content", content);
+        args.put("deliverId", deliverId);
+        args.put("friendUserIds", friendUserIds);
+        args.put("groupId", groupId);
+        // 这些字段是关键，写死或由调用者改写
+        args.put("mode", "AI");
+        args.put("requestType", "NORMAL");
+        args.put("sceneCode", "ANTFARM");
+        args.put("source", "H5");
+        args.put("spaceType", "ChickFamily");
 
-    /**
-     * 发送道早安消息（DeliverMsgSend）
-     * @param groupId 家庭组ID
-     * @param userIds JSONArray的用户ID列表
-     * @param content 消息内容
-     * @param deliverId 消息ID
-     * @return 接口返回的完整JSON字符串
-     */
-    public static String deliverMsgSend(String groupId, JSONArray userIds, String content, String deliverId) {
-        try {
-            String body = "{\"operationType\":\"com.alipay.antfarm.DeliverMsgSend\",\"requestData\":[{\"content\":\"" + content + "\",\"deliverId\":\"" + deliverId + "\",\"friendUserIds\":" + userIds.toString() + ",\"groupId\":\"" + groupId + "\",\"mode\":\"AI\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"spaceType\":\"ChickFamily\"}]}";
-            return HttpUtil.post("/com.alipay.antfarm.DeliverMsgSend", body);
-        } catch (Throwable t) {
-            Log.printStackTrace(TAG, "deliverMsgSend 调用异常:", t);
-            return "{}";
-        }
+        String params = "[" + args.toString() + "]";
+        return RequestManager.requestString("com.alipay.antfarm.DeliverMsgSend", params);
     }
+      
+    public static String syncFamilyStatus(String groupId, String operType, JSONArray syncUserIds) throws JSONException {
+        JSONObject args = new JSONObject();
+        args.put("groupId", groupId);
+        args.put("operType", operType);
+        args.put("requestType", "NORMAL");
+        args.put("sceneCode", "ANTFARM");
+        args.put("source", "H5");
+        args.put("syncUserIds", syncUserIds);
 
-    /**
-     * 同步家庭状态（syncFamilyStatus）
-     * @param groupId 家庭组ID
-     * @param userIds JSONArray的用户ID列表
-     * @return 接口返回的完整JSON字符串
-     */
-    public static String syncFamilyStatus(String groupId, JSONArray userIds) {
-        try {
-            String body = "{\"operationType\":\"com.alipay.antfarm.syncFamilyStatus\",\"requestData\":[{\"groupId\":\"" + groupId + "\",\"operType\":\"INTIMACY_VALUE\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"syncUserIds\":" + userIds.toString() + "}]}";
-            return HttpUtil.post("/com.alipay.antfarm.syncFamilyStatus", body);
-        } catch (Throwable t) {
-            Log.printStackTrace(TAG, "syncFamilyStatus 调用异常:", t);
-            return "{}";
-        }
-    }
-        
-    public static String syncFamilyStatus(String groupId, String operType, String syncUserIds) {
-        String args = "[{\"groupId\":\"" + groupId + "\",\"operType\":\"" + operType + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"syncUserIds\":[\"" + syncUserIds + "\"]}]";
-        return RequestManager.requestString("com.alipay.antfarm.syncFamilyStatus", args);
+        String params = "[" + args.toString() + "]";
+        return RequestManager.requestString("com.alipay.antfarm.syncFamilyStatus", params);
     }
 
     public static String inviteFriendVisitFamily(JSONArray receiverUserId) {
-        String args = "[{\"bizType\":\"FAMILY_SHARE\",\"receiverUserId\":" + receiverUserId + ",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]";
-        return RequestManager.requestString("com.alipay.antfarm.inviteFriendVisitFamily", args);
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("bizType", "FAMILY_SHARE");
+            obj.put("receiverUserId", receiverUserId);
+            obj.put("requestType", "NORMAL");
+            obj.put("sceneCode", "ANTFARM");
+            obj.put("source", "H5");
+
+            JSONArray arr = new JSONArray();
+            arr.put(obj);
+
+            return RequestManager.requestString("com.alipay.antfarm.inviteFriendVisitFamily", arr.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static String familyEatTogether(String groupId, JSONArray friendUserIdList, JSONArray cuisines) {
-        String args = "[{\"cuisines\":" + cuisines + ",\"friendUserIds\":" + friendUserIdList + ",\"groupId\":\"" + groupId + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"spaceType\":\"ChickFamily\"}]";
-        return RequestManager.requestString("com.alipay.antfarm.familyEatTogether", args);
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("cuisines", cuisines);
+            obj.put("friendUserIds", friendUserIdList);
+            obj.put("groupId", groupId);
+            obj.put("requestType", "NORMAL");
+            obj.put("sceneCode", "ANTFARM");
+            obj.put("source", "H5");
+            obj.put("spaceType", "ChickFamily");
+
+            JSONArray arr = new JSONArray();
+            arr.put(obj);
+
+            return RequestManager.requestString("com.alipay.antfarm.familyEatTogether", arr.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static String queryRecentFarmFood(int queryNum) {
