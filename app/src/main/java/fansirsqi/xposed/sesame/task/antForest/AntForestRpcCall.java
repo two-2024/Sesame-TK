@@ -75,16 +75,6 @@ public class AntForestRpcCall {
                 1000);
     }
 
-    //pk好友解析
-    public static JSONObject queryTopEnergyChallengeRanking() {
-    return RequestManager.requestJSONObject(
-        "alipay.antforest.forest.h5.queryTopEnergyChallengeRanking",
-        "[{\"source\":\"chInfo_ch_appcenter__chsub_9patch\"}]",
-        3,
-        1000);
-}
-
-
     public static RpcEntity getCollectEnergyRpcEntity(String bizType, String userId, long bubbleId) {
         String args1;
         if (StringUtil.isEmpty(bizType)) {
