@@ -909,16 +909,21 @@ public class AntForest extends ModelTask {
                 return userHomeObj;
             }
 
-            // 4. 检查是否有能量罩保护
-            if (hasEnergyShieldProtection(userHomeObj, serverTime) && !isSelf) {
+            // 4. 检查是否有道具保护
+            if (!isSelf) {
+                boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
+                boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
+                if (shielded || bombed) {
+                if (shielded) {
                 Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
-                return userHomeObj;
-            }
-            // 5. 检查是否被能量炸弹卡保护（避免被炸）
-           if (hasEnergyBombProtection(userHomeObj, serverTime, selfId) && !isSelf) {
+                }
+               if (bombed) {
                Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
-               return userHomeObj;
+              }
+              return userHomeObj;
+             }
             }
+            
             // 5. 获取所有可收集的能量球
             List<Long> availableBubbles = new ArrayList<>();
             List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
