@@ -826,31 +826,28 @@ public class AntForest extends ModelTask {
  * 根据 userId 获取好友显示名称（包括 PK 好友）
  * 如本地名称为空，则尝试通过 queryFriendHome 补全
  */
-private String resolveFriendName(String userId) {
+public static String resolvePkFriendName(String userId) {
+    if (StringUtil.isEmpty(userId)) return userId;
     try {
-        // 优先查 UserMap 的掩码名
-        String maskName = UserMap.getMaskName(userId);
-        if (!StringUtil.isEmpty(maskName)) return maskName;
-
-        // 请求主页信息以获取名称（PK 好友情况）
-        JSONObject home = queryFriendHome(userId);
-        if (home != null) {
-            JSONObject user = home.optJSONObject("user");
-            if (user != null) {
-                String name = user.optString("displayName", null);
-                if (StringUtil.isEmpty(name)) {
-                    name = user.optString("nickName", null);
+        JSONObject res = queryTopEnergyChallengeRanking();
+        if (res != null) {
+            JSONArray friendRanking = res.optJSONArray("friendRanking");
+            if (friendRanking != null) {
+                for (int i = 0; i < friendRanking.length(); i++) {
+                    JSONObject friend = friendRanking.getJSONObject(i);
+                    if (userId.equals(friend.optString("userId"))) {
+                        String displayName = friend.optString("displayName");
+                        if (!StringUtil.isEmpty(displayName)) {
+                            return displayName;
+                        }
+                    }
                 }
-                if (StringUtil.isEmpty(name)) {
-                    name = user.optString("userName", null);
-                }
-                return StringUtil.isEmpty(name) ? userId : name;
             }
         }
     } catch (Throwable t) {
-        Log.printStackTrace(TAG, "resolveFriendName 异常", t);
+        Log.printStackTrace("RPC", "resolvePkFriendName 异常", t);
     }
-    return userId; // 全部失败时返回 userId
+    return userId;
 }
 
     /**
