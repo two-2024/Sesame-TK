@@ -2777,7 +2777,7 @@ public class AntFarm extends ModelTask {
         }
          // 道早安
         if (familyOptions.getValue().contains("deliverMsgSend")) {
-            AntFarmRpcCall.deliverMsgSend(familyUserIds);
+            AntFarmFamily.INSTANCE.deliverMsgSend(familyUserIds);
         }
          //好友分享
         if (familyOptions.getValue().contains("inviteFriendVisitFamily")) {
@@ -2800,15 +2800,17 @@ public class AntFarm extends ModelTask {
 
     
     private void syncFamilyStatusIntimacy(String groupId) {
-        try {
-            String userId = UserMap.getCurrentUid();
-            JSONObject jo = new JSONObject(AntFarmRpcCall.syncFamilyStatus(groupId, "INTIMACY_VALUE", userId));
-            ResChecker.checkRes(TAG, jo);
-        } catch (Throwable t) {
-            Log.runtime(TAG, "syncFamilyStatus err:");
-            Log.printStackTrace(TAG, t);
-        }
+    try {
+        String userId = UserMap.getCurrentUid();
+        JSONArray userIds = new JSONArray();
+        userIds.put(userId);  // 把单个userId放进JSONArray
+        JSONObject jo = new JSONObject(AntFarmRpcCall.syncFamilyStatus(groupId, "INTIMACY_VALUE", userIds));
+        ResChecker.checkRes(TAG, jo);
+    } catch (Throwable t) {
+        Log.runtime(TAG, "syncFamilyStatus err:");
+        Log.printStackTrace(TAG, t);
     }
+}
 
     private void inviteFriendVisitFamily(List<String> friendUserIds) {
         try {
