@@ -767,4 +767,3 @@ public static String queryTopEnergyChallengeRanking() {
 }
 
 
-
