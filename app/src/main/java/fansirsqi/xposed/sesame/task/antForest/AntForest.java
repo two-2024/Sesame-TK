@@ -914,7 +914,11 @@ public class AntForest extends ModelTask {
                 Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
                 return userHomeObj;
             }
-
+            // 5. 检查是否被能量炸弹卡保护（避免被炸）
+           if (hasEnergyBombProtection(userHomeObj, serverTime, selfId) && !isSelf) {
+               Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
+               return userHomeObj;
+            }
             // 5. 获取所有可收集的能量球
             List<Long> availableBubbles = new ArrayList<>();
             List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
@@ -961,6 +965,48 @@ public class AntForest extends ModelTask {
         }
         return false;
     }
+    
+    /**
+ * 检查用户是否启用了能量炸弹卡（自己是否会被炸），并记录被炸日志
+ *
+ * @param userHomeObj 用户主页的JSON对象
+ * @param serverTime 当前服务器时间
+ * @param selfId 自己的userId
+ * @return true 表示该用户对你启用了炸弹卡，false 表示没有
+ */
+private boolean hasEnergyBombProtection(JSONObject userHomeObj, long serverTime, String selfId) {
+    JSONArray props = userHomeObj.optJSONArray("usingUserPropsNew");
+    if (props == null) return false;
+
+    for (int i = 0; i < props.length(); i++) {
+        JSONObject prop = props.optJSONObject(i);
+        if (prop == null) continue;
+
+        if ("ENERGY_BOMB_CARD".equals(prop.optString("propType")) &&
+            prop.optLong("endTime", 0) > serverTime) {
+
+            try {
+                JSONObject extInfo = new JSONObject(prop.optString("extInfo", ""));
+                JSONArray explodedIds = extInfo.optJSONArray("explodeFriendIds");
+
+                if (explodedIds != null) {
+                    for (int j = 0; j < explodedIds.length(); j++) {
+                        if (selfId.equals(explodedIds.optString(j))) {
+                            // 记录日志
+                            String userId = userHomeObj.optString("userId");
+                            String userName = UserMap.getMaskName(userId);
+                            Log.forest(TAG, "⚠️ [" + userName + "]放了炸弹卡，危险！");
+                            return true;
+                        }
+                    }
+                }
+            } catch (JSONException e) {
+                Log.debug(TAG, "炸弹卡 extInfo 解析失败: " + e.getMessage());
+            }
+        }
+    }
+    return false;
+}
 
     /**
      * 提取能量球状态
