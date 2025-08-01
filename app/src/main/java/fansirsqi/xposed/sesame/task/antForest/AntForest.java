@@ -822,6 +822,36 @@ public class AntForest extends ModelTask {
         return friendHomeObj; // 返回用户主页对象
     }
 
+    /**
+ * 根据 userId 获取好友显示名称（包括 PK 好友）
+ * 如本地名称为空，则尝试通过 queryFriendHome 补全
+ */
+private String resolveFriendName(String userId) {
+    try {
+        // 优先查 UserMap 的掩码名
+        String maskName = UserMap.getMaskName(userId);
+        if (!StringUtil.isEmpty(maskName)) return maskName;
+
+        // 请求主页信息以获取名称（PK 好友情况）
+        JSONObject home = queryFriendHome(userId);
+        if (home != null) {
+            JSONObject user = home.optJSONObject("user");
+            if (user != null) {
+                String name = user.optString("displayName", null);
+                if (StringUtil.isEmpty(name)) {
+                    name = user.optString("nickName", null);
+                }
+                if (StringUtil.isEmpty(name)) {
+                    name = user.optString("userName", null);
+                }
+                return StringUtil.isEmpty(name) ? userId : name;
+            }
+        }
+    } catch (Throwable t) {
+        Log.printStackTrace(TAG, "resolveFriendName 异常", t);
+    }
+    return userId; // 全部失败时返回 userId
+}
 
     /**
      * 格式化时间差为人性化的字符串
@@ -909,12 +939,21 @@ public class AntForest extends ModelTask {
                 return userHomeObj;
             }
 
-            // 4. 检查是否有能量罩保护
-            if (hasEnergyShieldProtection(userHomeObj, serverTime) && !isSelf) {
+            // 4. 检查是否有道具保护
+            if (!isSelf) {
+                boolean shielded = hasEnergyShieldProtection(userHomeObj, serverTime);
+                boolean bombed = hasEnergyBombProtection(userHomeObj, serverTime, selfId);
+                if (shielded || bombed) {
+                if (shielded) {
                 Log.record(TAG, "[" + userName + "]被能量罩保护着哟");
-                return userHomeObj;
+                }
+               if (bombed) {
+               Log.record(TAG, "[" + userName + "]放了炸弹卡，跳过");
+              }
+              return userHomeObj;
+             }
             }
-
+            
             // 5. 获取所有可收集的能量球
             List<Long> availableBubbles = new ArrayList<>();
             List<Pair<Long, Long>> waitingBubbles = new ArrayList<>();
@@ -961,6 +1000,44 @@ public class AntForest extends ModelTask {
         }
         return false;
     }
+    
+    /**
+ * 检查用户是否启用了能量炸弹卡（自己是否会被炸），并记录被炸日志
+ *
+ * @param userHomeObj 用户主页的JSON对象
+ * @param serverTime 当前服务器时间
+ * @param selfId 自己的userId
+ * @return true 表示该用户对你启用了炸弹卡，false 表示没有
+ */
+private boolean hasEnergyBombProtection(JSONObject userHomeObj, long serverTime, String selfId) {
+    JSONArray props = userHomeObj.optJSONArray("usingUserPropsNew");
+    if (props == null) return false;
+
+    for (int i = 0; i < props.length(); i++) {
+        JSONObject prop = props.optJSONObject(i);
+        if (prop == null) continue;
+
+        if ("ENERGY_BOMB_CARD".equals(prop.optString("propType")) &&
+            prop.optLong("endTime", 0) > serverTime) {
+
+            try {
+                JSONObject extInfo = new JSONObject(prop.optString("extInfo", ""));
+                JSONArray explodedIds = extInfo.optJSONArray("explodeFriendIds");
+
+                if (explodedIds != null) {
+                    for (int j = 0; j < explodedIds.length(); j++) {
+                        if (selfId.equals(explodedIds.optString(j))) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (JSONException e) {
+                Log.debug(TAG, "炸弹卡 extInfo 解析失败: " + e.getMessage());
+            }
+        }
+    }
+    return false;
+}
 
     /**
      * 提取能量球状态
@@ -1085,6 +1162,7 @@ private void collectPkFriendEnergy() {
             Log.printStackTrace(TAG, "queryTopEnergyChallengeRanking 异常", t);
         }
     }
+    
     private void collectFriendEnergy() {
         try {
             JSONObject friendsObject = new JSONObject(AntForestRpcCall.queryEnergyRanking());
@@ -1158,8 +1236,8 @@ private void collectPkFriendEnergy() {
     private void processSingleFriend(JSONObject friendObj) {
         try {
             String userId = friendObj.getString("userId");
-            String userName = UserMap.getMaskName(userId);
             if (Objects.equals(userId, selfId)) return;//如果是自己，则跳过
+            String userName = resolveFriendName(userId); // 替换获取名称方式
             boolean needCollectEnergy = collectEnergy.getValue() && !dontCollectMap.contains(userId); //开启了收能量功能并且不在排除名单中
             boolean needHelpProtect = helpFriendCollectType.getValue() != HelpFriendCollectType.NONE && friendObj.optBoolean("canProtectBubble") && Status.hasFlagToday("help_friend_collect_protect::" + selfId);
 
@@ -1392,10 +1470,10 @@ private void collectPkFriendEnergy() {
                         String resultCode = jo.getString("resultCode");
                         if (!"SUCCESS".equalsIgnoreCase(resultCode)) {
                             if ("PARAM_ILLEGAL2".equals(resultCode)) {
-                                Log.record(TAG, "[" + UserMap.getMaskName(userId) + "]" + "能量已被收取,取消重试 错误:" + jo.getString("resultDesc"));
+                                Log.record(TAG, "[" + resolveFriendName(userId) + "]" + "能量已被收取,取消重试 错误:" + jo.getString("resultDesc"));
                                 return;
                             }
-                            Log.record(TAG, "[" + UserMap.getMaskName(userId) + "]" + jo.getString("resultDesc"));
+                            Log.record(TAG, "[" + resolveFriendName(userId) + "]" + jo.getString("resultDesc"));
                             if (tryCount < tryCountInt) {
                                 collectEnergyEntity.setNeedRetry();
                                 collectEnergy(collectEnergyEntity);
@@ -1417,7 +1495,7 @@ private void collectPkFriendEnergy() {
                                 FriendWatch.friendWatch(userId, collected);
                                 int randomIndex = random.nextInt(emojiList.size());
                                 String randomEmoji = emojiList.get(randomIndex);
-                                String str = "一键收取️" + randomEmoji + collected + "g[" + UserMap.getMaskName(userId) + "]#";
+                                String str = "一键收取️" + randomEmoji + collected + "g[" + resolveFriendName(userId) + "]#";
                                 if (needDouble) {
                                     Log.forest(str + "耗时[" + spendTime + "]ms[双击]");
                                     Toast.show(str + "[双击]");
@@ -1427,7 +1505,7 @@ private void collectPkFriendEnergy() {
                                 }
                                 Statistics.addData(Statistics.DataType.COLLECTED, collected);
                             } else {
-                                Log.record(TAG, "一键收取❌[" + UserMap.getMaskName(userId) + "]的能量失败" + " " + "，UserID：" + userId + "，BubbleId：" + newBubbleIdList);
+                                Log.record(TAG, "一键收取❌[" + resolveFriendName(userId) + "]的能量失败" + " " + "，UserID：" + userId + "，BubbleId：" + newBubbleIdList);
                             }
                             if (!newBubbleIdList.isEmpty()) {
                                 collectEnergyEntity.setRpcEntity(AntForestRpcCall.getCollectBatchEnergyRpcEntity(userId, newBubbleIdList));
@@ -1442,7 +1520,7 @@ private void collectPkFriendEnergy() {
                             if (collected > 0) {
                                 int randomIndex = random.nextInt(emojiList.size());
                                 String randomEmoji = emojiList.get(randomIndex);
-                                String str = "普通收取" + randomEmoji + collected + "g[" + UserMap.getMaskName(userId) + "]";
+                                String str = "普通收取" + randomEmoji + collected + "g[" + resolveFriendName(userId) + "]";
                                 if (needDouble) {
                                     Log.forest(str + "耗时[" + spendTime + "]ms[双击]");
                                     Toast.show(str + "[双击]");
@@ -1452,7 +1530,7 @@ private void collectPkFriendEnergy() {
                                 }
                                 Statistics.addData(Statistics.DataType.COLLECTED, collected);
                             } else {
-                                Log.record(TAG, "普通收取❌[" + UserMap.getMaskName(userId) + "]的能量失败");
+                                Log.record(TAG, "普通收取❌[" + resolveFriendName(userId) + "]的能量失败");
                                 Log.runtime(TAG, "，UserID：" + userId + "，BubbleId：" + bubble.getLong("id"));
                             }
                             if (bubble.getBoolean("canBeRobbedAgain")) {
