@@ -321,11 +321,6 @@ data object AntFarmFamily {
         return null
     }
 
-
-    /**
-     * 发送道早安
-     * @param familyUserIds 家庭成员列表
-     */
     /**
      * 发送道早安
      * @param familyUserIds 家庭成员列表
@@ -334,35 +329,35 @@ data object AntFarmFamily {
     try {
         val now = Calendar.getInstance()
         val hour = now.get(Calendar.HOUR_OF_DAY)
-        if (hour !in 6..9) return
-        
+        if (hour !in 6..9) return  // 6-9点才执行
+
         if (groupId.isNullOrEmpty()) return
-        
+
         familyUserIds.remove(UserMap.currentUid)
         if (familyUserIds.isEmpty()) return
-        
+
         if (Status.hasFlagToday("antFarm::deliverMsgSend")) return
-        
+
         val userIds = JSONArray()
         familyUserIds.forEach { userIds.put(it) }
-        
+
         val recommendResp = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
         if (!ResChecker.checkRes(TAG, recommendResp)) return
-        
+
         val traceId = recommendResp.optString("ariverRpcTraceId")
         if (traceId.isEmpty()) return
-        
+
         val contentResp = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, traceId))
         if (!ResChecker.checkRes(TAG, contentResp)) return
-        
+
         val content = contentResp.optString("content")
         val deliverId = contentResp.optString("deliverId")
         if (content.isEmpty() || deliverId.isEmpty()) return
-        
-        // 使用类名调用方法
+
+        // 查询确认内容
         AntFarmRpcCall.QueryExpandContent(deliverId)
-        
-        // 注意：Java静态方法调用不支持命名参数，改用位置参数
+
+        // 发送早安消息，注意这里不能用命名参数，参数顺序调用
         val sendResp = JSONObject(AntFarmRpcCall.deliverMsgSend(
             groupId!!,
             userIds,
@@ -370,18 +365,19 @@ data object AntFarmFamily {
             deliverId
         ))
         if (!ResChecker.checkRes(TAG, sendResp)) return
-        
+
         Log.farm("家庭任务🏠道早安: $content 🌈")
         Status.setFlagToday("antFarm::deliverMsgSend")
-        
-        // syncFamilyStatus传单个字符串参数，这里假设拼接成逗号分隔字符串
-        val syncUserIdsStr = familyUserIds.joinToString(",")
-        AntFarmRpcCall.syncFamilyStatus(groupId!!, "INTIMACY_VALUE", syncUserIdsStr)
-        
+
+        // 同步亲密度，传JSONArray
+        val syncUserIds = JSONArray()
+        familyUserIds.forEach { syncUserIds.put(it) }
+        AntFarmRpcCall.syncFamilyStatus(groupId!!, "INTIMACY_VALUE", syncUserIds)
     } catch (t: Throwable) {
         Log.printStackTrace(TAG, "deliverMsgSend err:", t)
     }
 }
+
 
     /**
      * 好友分享家庭
